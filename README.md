@@ -5,11 +5,7 @@ I am not a professional programmer – most of my knowledge is self-taught.
 I designed this script so that almost all functions can be activated or deactivated individually.  
 My goal was to make the script install all missing components (e.g., Python modules) automatically so minimal prior knowledge is required.  
 
-This script is the result of years of work and runs very well in my own setup.  
-However, I can only test it in my own car.  
-In theory, it should work with other models as well.  
-For this reason, I have created a table of compatible and tested models.  
-Feedback after testing is highly appreciated so we can keep this table updated!  
+This script is the result of years of work and runs very well in my own setup. However, I can only test it in my own car. In theory, it should work with other models as well. For this reason, I have created a table of compatible and tested models. Feedback after testing is highly appreciated so we can keep this table updated! 
 
 ---
 
