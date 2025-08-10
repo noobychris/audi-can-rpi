@@ -33,7 +33,7 @@ body:
     attributes:
       label: Year (optional)
       description: e.g. "2004" (leave empty if unknown)
-      placeholder: 2004
+      placeholder: "2004"
 
   - type: dropdown
     id: dis_fis
