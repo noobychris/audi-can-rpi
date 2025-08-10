@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting! Please fill out all required fields so we can reproduce the issue quickly.
+        Thanks for reporting! Please fill out the fields so we can reproduce the issue quickly.
 
   - type: dropdown
     id: car_model
@@ -27,14 +27,8 @@ body:
   - type: input
     id: car_model_other
     attributes:
-      label: Specify vehicle model
-      description: Please specify your vehicle model if you selected "Other / Unknown" above.
+      label: Specify vehicle model (if "Other / Unknown")
       placeholder: e.g., Audi A6 C5
-    validations:
-      required: true
-    if:
-      field: car_model
-      equals: Other / Unknown
 
   - type: dropdown
     id: rpi_model
@@ -51,14 +45,8 @@ body:
   - type: input
     id: rpi_model_other
     attributes:
-      label: Specify Raspberry Pi model
-      description: Please specify your Raspberry Pi model if you selected "Other / Unknown" above.
+      label: Specify Raspberry Pi model (if "Other / Unknown")
       placeholder: e.g., Raspberry Pi 5
-    validations:
-      required: true
-    if:
-      field: rpi_model
-      equals: Other / Unknown
 
   - type: dropdown
     id: can_module
@@ -75,14 +63,8 @@ body:
   - type: input
     id: can_module_other
     attributes:
-      label: Specify CAN module
-      description: Please specify your CAN module if you selected "Other / Unknown" above.
+      label: Specify CAN module (if "Other / Unknown")
       placeholder: e.g., custom Arduino CAN interface
-    validations:
-      required: true
-    if:
-      field: can_module
-      equals: Other / Unknown
 
   - type: input
     id: version
