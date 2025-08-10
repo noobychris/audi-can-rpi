@@ -1,53 +1,44 @@
-# .github/workflows/auto-title-compatibility.yml
-name: Auto Title for Compatibility Issues
-
+name: Auto-title Compatibility Issues
 on:
   issues:
-    types: [opened]
-
-permissions:
-  issues: write
+    types: [opened, edited]
 
 jobs:
-  retitle:
+  auto_title:
     if: contains(join(github.event.issue.labels.*.name, ','), 'compatibility')
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
-      - name: Build title from form fields
+      - name: Build dynamic title from form fields
         uses: actions/github-script@v7
         with:
           script: |
             const issue = context.payload.issue;
             const body = issue.body || '';
 
-            // Helper: extract section content that follows a "### Label" heading
             function extract(label) {
-              const re = new RegExp(`(?:^|\\n)\\s*###\\s*${label}\\s*\\n([\\s\\S]*?)(?=\\n###|$)`, 'i');
+              const re = new RegExp(`###\\s+${label}[\\r\\n]+([\\s\\S]*?)(?:\\r?\\n\\r?\\n|$)`, 'i');
               const m = body.match(re);
               if (!m) return '';
-              // Take first non-empty line, strip blockquotes & markdown
-              return m[1]
-                .split('\n')
-                .map(l => l.replace(/^>\s?/, '').trim())
-                .filter(Boolean)[0] || '';
+              // take first non-empty line
+              const firstLine = m[1].split('\n').map(s => s.trim()).find(Boolean) || '';
+              return firstLine.replace(/^"|"$/g, '').trim();
             }
 
             const model = extract('Model');
             const type  = extract('Type');
-            const year  = extract('Year \\(optional\\)'); // if your label literally says: Year (optional)
+            const year  = extract('Year \\(optional\\)');
 
-            // Assemble title parts (skip empties)
-            const parts = [model, type, year].filter(Boolean).join(' ').trim();
-            const newTitle = parts ? `[Compatibility]: ${parts}` : '[Compatibility]: Report';
-
-            if (issue.title !== newTitle) {
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                title: newTitle
-              });
-              core.info(`Title updated to: ${newTitle}`);
-            } else {
-              core.info('Title already matches; no change.');
+            const parts = [model, type, year].filter(Boolean);
+            if (parts.length) {
+              const newTitle = `[Compatibility]: ${parts.join(' ')}`;
+              if (issue.title !== newTitle) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  title: newTitle
+                });
+              }
             }
