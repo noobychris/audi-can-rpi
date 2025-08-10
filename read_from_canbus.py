@@ -1,57 +1,62 @@
 #!/usr/local/bin/python3.13
 # -*- coding: utf-8 -*-
 
+# Project on GitHub: https://github.com/noobychris/audi-can-rpi
+# Version 0.9 of the Script
+
 #  Enable here the functions you want to use
 #########################################################
-#
-can_interface = 'can0'  # set can interface - default 'can0'
-#
-welcome_message_1st_line = 'WELCOME'  # Welcome message 1st line on script startup. Max 8 digits.
-welcome_message_2nd_line = 'USER'  # Welcome message 2nd line on script startup. Max 8 digits.
-#
-send_on_canbus = True  # True/False = the script will send/not send on canbus.
-only_send_if_radio_is_in_tv_mode = True  # True/False = script will just send if rns-e is in tv mode.
-#
-activate_rnse_tv_input = False  # Send the TV input activation message if you don't have an IMA.
-tv_input_format = 'NTSC'  # Select if you know your video input format. 'PAL' or 'NTSC'
-#
+                                                        #
+can_interface = 'can0'                                  # set can interface - default 'can0'
+                                                        #
+welcome_message_1st_line = 'WELCOME'                    # Welcome message 1st line on script startup. Max 8 digits.
+welcome_message_2nd_line = 'USER'                       # Welcome message 2nd line on script startup. Max 8 digits.
+                                                        #
+send_on_canbus = True                                   # True/False = the script will send/not send on canbus.
+only_send_if_radio_is_in_tv_mode = True                 # True/False = script will just send if rns-e is in tv mode.
+                                                        #
+activate_rnse_tv_input = False                          # Send the TV input activation message if you don't have an IMA.
+tv_input_format = 'NTSC'                                # Select if you know your video input format. 'PAL' or 'NTSC'
+                                                        #
 # Dashboard dis/fis 1st and 2nd Line                    #
-show_label = False  # True = 1st line dis/fis shows label from 2nd lines value.
-toggle_fis1 = 1  # check the numbers below this box     # 1st line dis/fis - disabled if show_label = True
-toggle_fis2 = 6  # check the numbers below this box     # 2nd line dis/fis
+show_label = False                                      # True = 1st line dis/fis shows label from 2nd lines value.
+toggle_fis1 = 6  # check the numbers below this box     # 1st line dis/fis - disabled if show_label = True
+toggle_fis2 = 7  # check the numbers below this box     # 2nd line dis/fis
 scroll_type = 'oem_style'  # "scroll" or "oem_style"    # oem_style: show 8 digits and switch to the next 8 digits
-#
-read_and_set_time_from_dashboard = True  # Read the date and the time from the dashboard.
-control_pi_by_rns_e_buttons = True  # Use rns-e buttons to control the raspberry pi.
-send_values_to_dashboard = True  # Send speed, rpm, coolant, pi cpu usage and temp to dashboard
-toggle_values_by_rnse_longpress = True  # Toggle values with up/down longpress
-#
-reversecamera_by_reversegear = False  # Use hdmi to csi shield to connect a reversecamera.
-reversecamera_by_down_longpress = False  #
-reversecamera_guidelines = False  # Show guidelines and put a .png file into the script folder.e
-reversecamera_turn_off_delay = 5  # Delay to turn off the reversecamera in seconds.
-#
-shutdown_by_ignition_off = True  # Shutdown the raspberry pi, if the ignition went off.
-shutdown_by_pulling_key = False  # Shutdown the raspberry pi, if the key got pulled.
-shutdown_type = 'gently'  # 'gently' waits for stopping all threads / 'instant' shuts downn the pi instantly
-#
+                                                        #
+read_and_set_time_from_dashboard = True                 # Read the date and the time from the dashboard.
+control_pi_by_rns_e_buttons = True                      # Use rns-e buttons to control the raspberry pi.
+send_values_to_dashboard = True                         # Send speed, rpm, coolant, pi cpu usage and temp to dashboard
+toggle_values_by_rnse_longpress = True                  # Toggle values with up/down longpress
+                                                        #
+reversecamera_by_reversegear = False                    # Use hdmi to csi shield to connect a reversecamera.
+reversecamera_by_down_longpress = False                 #
+reversecamera_guidelines = False                        # Show guidelines and put a .png file into the script folder.e
+reversecamera_turn_off_delay = 5                        # Delay to turn off the reversecamera in seconds.
+                                                        #
+shutdown_by_ignition_off = True                         # Shutdown the raspberry pi, if the ignition went off.
+shutdown_by_pulling_key = False                         # Shutdown the raspberry pi, if the key got pulled.
+shutdown_type = 'gently'                                # 'gently' waits for stopping all threads / 'instant' shuts downn the pi instantly
+                                                        #
 # OAP API FEATURES !requires OpenAuto Pro 15 or higher! #
-initial_day_night_mode = 'night'  # set here the mode you want to set by default."day"/"night"
-change_dark_mode_by_car_light = True  # read cars light state on/off to change oap and aa day/night.
-send_oap_api_mediadata_to_dashboard = True  # Send oap api mediadata (title, artist, etc.) to dashboard
-send_to_oap_gauges = True  # obdinject speed etc to oap api
-#
+initial_day_night_mode = 'night'                        # set here the mode you want to set by default."day"/"night"
+change_dark_mode_by_car_light = True                    # read cars light state on/off to change oap and aa day/night.
+send_oap_api_mediadata_to_dashboard = True              # Send oap api mediadata (title, artist, etc.) to dashboard
+send_to_oap_gauges = True                               # obdinject speed etc to oap api
+                                                        #
 # Speed measure 0-100 km/h etc.                         #
-lower_speed = 0  # speed to start acceleration measurement (example: 0 km/h)
-upper_speed = 100  # speed to stop acceleration measurement (example: 100 km/h)
-export_speed_measurements_to_file = True  #
-#
-speed_unit = 'km/h'  # 'km/h' or 'mph'
-temp_unit = '°C'  # '°C' or '°F'
-#
-ENABLE_LOGGING = False  #
-show_can_messages_in_logs = False
-#
+lower_speed = 0                                         # speed to start acceleration measurement (example: 0 km/h)
+upper_speed = 100                                       # speed to stop acceleration measurement (example: 100 km/h)
+export_speed_measurements_to_file = True                #
+                                                        #
+speed_unit = 'km/h'                                     # 'km/h' or 'mph'
+temp_unit = '°C'                                        # '°C' or '°F'
+                                                        #
+#########################################################
+                                                        #
+ENABLE_LOGGING = False                                  # please set to "true" if you have problems and want to report a bug on github
+show_can_messages_in_logs = False                       # please set to "true" if you have problems and want to report a bug on github
+                                                        #
 #########################################################
 
 # 1 = title, 2 = artist, 3 = album, 4 = song position, 5 = song duration, 6 = speed, 7 = rpm, 8 = coolant
@@ -2176,11 +2181,11 @@ async def process_canid_461(msg):
         elif msg == '373001000100':  # RNS-E: setup button pressed
             setup += 1
         elif msg == '373004000100' and setup > 0:  # RNS-E: setup button released
-            if setup <= 16:
+            if setup <= 50:
                 device.emit(uinput.KEY_M, 1)
                 device.emit(uinput.KEY_M, 0)
                 setup = 0
-            elif setup > 16:
+            elif setup > 50:
                 command = 'sudo shutdown -h now'
                 result = await run_command("sudo shutdown -h now", log_output=False)
                 if result["stderr"]:
