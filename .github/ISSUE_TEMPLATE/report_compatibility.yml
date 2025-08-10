@@ -1,20 +1,20 @@
 name: "🚗 Compatibility report"
-description: Melde ein (teilweise) kompatibles Fahrzeug
-title: "[Compatibility]: <Modell> <Typ> <Baujahr(optional)>"
+description: Report a (partially) compatible vehicle
+title: "[Compatibility]: <Model> <Type> <Year(optional)>"
 labels: ["compatibility", "triage"]
 assignees: ["noobychris"]
 body:
   - type: markdown
     attributes:
       value: |
-        Danke fürs Mitmachen! Bitte fülle die Felder so genau wie möglich aus.
-        Für bessere Nachvollziehbarkeit helfen Logs sehr (siehe unten).
+        Thanks for contributing! Please fill out the fields as accurately as possible.  
+        For better verification, logs are highly appreciated (see below).
 
   - type: input
     id: model
     attributes:
-      label: Modell
-      description: z. B. "Audi A4", "Audi A3", "Audi TT"
+      label: Model
+      description: e.g. "Audi A4", "Audi A3", "Audi TT"
       placeholder: Audi A4
     validations:
       required: true
@@ -22,8 +22,8 @@ body:
   - type: input
     id: type
     attributes:
-      label: Typ
-      description: z. B. "8E", "8P", "8J"
+      label: Type
+      description: e.g. "8E", "8P", "8J"
       placeholder: 8E
     validations:
       required: true
@@ -31,65 +31,65 @@ body:
   - type: dropdown
     id: dis_fis
     attributes:
-      label: DIS/FIS Ausgabe funktioniert?
+      label: DIS/FIS output working?
       options:
         - "-- Please choose --"
-        - Yes
-        - No
-        - Not tested
+        - "Yes"
+        - "No"
+        - "Not tested"
     validations:
       required: true
 
   - type: dropdown
     id: mfsw
     attributes:
-      label: MFSW (Lenkradtasten) funktionieren?
+      label: MFSW (multi-function steering wheel) working?
       options:
         - "-- Please choose --"
-        - Yes
-        - No
-        - Not installed
-        - Not tested
+        - "Yes"
+        - "No"
+        - "Not installed"
+        - "Not tested"
     validations:
       required: true
 
   - type: textarea
     id: works
     attributes:
-      label: Was funktioniert?
-      description: Kurz stichpunktartig (z. B. „Titelanzeige“, „Geschwindigkeit/RPM“, „Tag/Nacht-Umschaltung“)
+      label: What works?
+      description: Short bullet points (e.g., “Track title display”, “Speed/RPM display”, “Day/night switching”)
       placeholder: |
-        - Titelanzeige im FIS
-        - Geschwindigkeitsanzeige
-        - Tag/Nacht-Umschaltung
+        - Track title display in FIS
+        - Speed display
+        - Day/night switching
 
   - type: textarea
     id: not_working
     attributes:
-      label: Was funktioniert (noch) nicht?
-      description: Bitte konkrete Punkte nennen (z. B. „MFSW → skip track hat keine Wirkung“)
+      label: What does NOT (yet) work?
+      description: Please specify exact issues (e.g., “MFSW → skip track does nothing”)
       placeholder: |
-        - MFSW „Down longpress“ triggert keine Umschaltung
-        - Außentemperatur wird nicht angezeigt
+        - MFSW “Down longpress” does not switch values
+        - Outside temperature not displayed
 
   - type: textarea
     id: setup
     attributes:
-      label: Setup / Hinweise (optional)
-      description: Hardware/Software-Setup, das relevant sein könnte (Raspberry Pi Modell, CAN-Interface, RNS-E/TV-Modus, OpenAuto Pro Version, besondere Codierungen)
+      label: Setup / notes (optional)
+      description: Hardware/software setup that might be relevant (Raspberry Pi model, CAN interface, RNS-E/TV mode, OpenAuto Pro version, special codings)
       placeholder: |
-        - Raspberry Pi 4 (4GB), PiCan2, RNS-E mit TV-Modus aktiv
+        - Raspberry Pi 4 (4GB), PiCan2, RNS-E with TV mode enabled
         - OpenAuto Pro vX.Y
         - Script Settings: ENABLE_LOGGING=True, only_send_if_radio_is_in_tv_mode=True
 
   - type: textarea
     id: logs
     attributes:
-      label: Relevante Logs/Screenshots (optional)
+      label: Relevant logs/screenshots (optional)
       description: |
-        Bitte, wenn möglich, Log-Auszüge anhängen:
-        `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`
-        Beispiel: `2025_07_03-12:30:12_read_from_canbus_errors.log`
+        If possible, attach relevant log excerpts:  
+        `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`  
+        Example: `2025_07_03-12:30:12_read_from_canbus_errors.log`
       placeholder: |
         ```text
         2025-07-03 12:30:15,123 | INFO  | ... | CAN-Message with CAN-ID ...
@@ -98,5 +98,5 @@ body:
   - type: textarea
     id: notes
     attributes:
-      label: Zusätzliche Anmerkungen (optional)
-      placeholder: Alles, was uns beim Einordnen hilft (Firmware, Besonderheiten, Codierungen)
+      label: Additional notes (optional)
+      placeholder: Anything that might help us assess compatibility (firmware, special codings, etc.)
