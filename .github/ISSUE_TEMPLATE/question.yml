@@ -1,0 +1,38 @@
+name: "❓ Question / Help request"
+description: Ask a question or request help
+title: "[Question]: "
+labels: ["question"]
+assignees: ["noobychris"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reaching out!  
+        Please describe your question or problem in detail so we can help you quickly.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Short question summary
+      placeholder: e.g., How do I enable the reverse camera overlay?
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Full details
+      description: Include any relevant context, what you have tried so far, and your current setup (vehicle, Raspberry Pi, CAN module).
+      placeholder: |
+        - Vehicle model: Audi A4 B6
+        - Raspberry Pi: 4 (4GB)
+        - CAN module: PiCan3
+        - Question: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional information
+      description: Add screenshots, links, or other helpful context.
