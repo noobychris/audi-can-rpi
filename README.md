@@ -95,11 +95,13 @@ Your feedback helps improve this project!
 
 [![Report Bug](https://img.shields.io/badge/🐞%20Report%20Bug-red)](https://github.com/noobychris/audi-can-rpi/issues/new?template=bug_report.yml&labels=bug)
 [![Request Feature](https://img.shields.io/badge/💡%20Request%20Feature-blue)](https://github.com/noobychris/audi-can-rpi/issues/new?template=feature_request.yml&labels=enhancement)
+[![Ask a Question](https://img.shields.io/badge/❓%20Ask%20a%20Question-purple)](https://github.com/noobychris/audi-can-rpi/issues/new?template=question.yml&labels=question)
 [![Join Discussions](https://img.shields.io/badge/💬%20Join%20Discussions-green)](https://github.com/noobychris/audi-can-rpi/discussions)
 
 - **🐞 Report a bug** – Use the [Bug Report form](https://github.com/noobychris/audi-can-rpi/issues/new?template=bug_report.yml&labels=bug) to help us fix it quickly.
 - **💡 Request a feature** – Share your idea via the [Feature Request form](https://github.com/noobychris/audi-can-rpi/issues/new?template=feature_request.yml&labels=enhancement).
-- **💬 Join discussions** – Ask questions, share test results, or brainstorm in the [Discussions area](https://github.com/noobychris/audi-can-rpi/discussions).
+- **❓ Ask a question** – Use the [Question form](https://github.com/noobychris/audi-can-rpi/issues/new?template=question.yml&labels=question) for setup help, usage tips, or troubleshooting advice.
+- **💬 Join discussions** – Ask broader questions, share test results, or brainstorm in the [Discussions area](https://github.com/noobychris/audi-can-rpi/discussions).
 - 
 ---
 
