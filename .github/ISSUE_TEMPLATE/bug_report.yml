@@ -21,13 +21,13 @@ body:
       label: Vehicle model
       description: Select the tested model
       options:
+        - "-- Please choose --"
         - Audi A4 8E (B6/B7)
         - Audi A3 8L
         - Audi A3 8P
         - Audi TT 8J
         - Audi R8 42
         - Other / Unknown
-      default: 0
     validations:
       required: true
 
@@ -42,11 +42,11 @@ body:
     attributes:
       label: Raspberry Pi
       options:
+        - "-- Please choose --"
         - Raspberry Pi 3B
         - Raspberry Pi 3B+
         - Raspberry Pi 4 (2/4/8GB)
         - Other / Unknown
-      default: 2
     validations:
       required: true
 
@@ -61,11 +61,11 @@ body:
     attributes:
       label: CAN module / interface
       options:
+        - "-- Please choose --"
         - PiCan2
         - PiCan3
         - vcan0 (virtual)
         - Other / Unknown
-      default: 1
     validations:
       required: true
 
