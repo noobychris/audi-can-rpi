@@ -18,8 +18,8 @@ The OpenAuto Pro features in the script can be disabled, so the script will also
 
 ## Main Features
 
-### 1. Driver Information System (FIS/DIS) Text Output
-The script can write to the first two lines of the **FIS** (Driver Information System) in the instrument cluster.  
+### 1. Driver Information System (DIS/FIS) Text Output
+The script can write to the first two lines of the **DIS/FIS** (Driver Information System) in the instrument cluster.  
 It can overwrite existing text (e.g., from the radio) via the telephone channel.
 
 **Available data sources:**
@@ -27,7 +27,8 @@ It can overwrite existing text (e.g., from the radio) via the telephone channel.
 - **CAN Bus Data** (Infotainment Bus)  
   - Speed  
   - RPM  
-  - Coolant temperature (A4 8E only)  
+  - Coolant temperature (A4 8E only)
+  - Outside temperature
   - CPU usage & temperature  
   - Custom speed measurement value  
   - Blank line (no content)  
@@ -100,15 +101,17 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 ### 3. Compabillity
 
-| Model        | DIS/FIS Output | MFSW* | Note |
+| Model        | DIS/FIS Output | MFSW | Note |
 |--------------|----------------|-------|------|
-| Audi A4 8E   | ✅              | ❓     |      |
-| Audi A3 8L   | ❓              | ❓     |      |
-| Audi A3 8P   | ❓              | ❓     |      |
-| Audi TT 8J   | ❓              | ❓     |      |
-| Audi R8 42   | ❓              | ❓     |      |
+| Audi A4 8E   | ✅              | ⚠️     |      |
+| Audi A3 8L   | ⚠️              | ⚠️     |      |
+| Audi A3 8P   | ⚠️              | ⚠️     |      |
+| Audi TT 8J   | ⚠️              | ⚠️     |      |
+| Audi R8 42   | ⚠️              | ⚠️     |      |
 
-\* MFSW = Multi Function Steering Wheel
+**Legend:**  
+✅ = Tested and working  
+⚠️ = Not yet tested / uncertain 
 
 Note: The cars in the list should work based on candump analysis from this cars. It could be work on more cars, if the can messages are the same.
 
