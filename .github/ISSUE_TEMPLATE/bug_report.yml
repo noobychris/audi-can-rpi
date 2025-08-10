@@ -24,6 +24,14 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: car_model_other
+    attributes:
+      label: Specify vehicle model
+      description: Please specify your vehicle model if you selected "Other / Unknown" above.
+      placeholder: e.g., Audi A6 C5
+    if: car_model == "Other / Unknown"
+
   - type: dropdown
     id: rpi_model
     attributes:
@@ -35,72 +43,3 @@ body:
         - Other / Unknown
     validations:
       required: true
-
-  - type: dropdown
-    id: can_module
-    attributes:
-      label: CAN module / interface
-      options:
-        - PiCan2
-        - PiCan3
-        - vcan0 (virtual)
-        - Other / Unknown
-    validations:
-      required: true
-  
-  - type: input
-    id: can_module_other
-    attributes:
-      label: Specify CAN module
-      description: Please specify your CAN module if you selected "Other / Unknown" above.
-      placeholder: e.g., custom Arduino CAN interface
-    if: can_module == "Other / Unknown"
-
-  - type: input
-    id: version
-    attributes:
-      label: Script version / commit
-      description: E.g. tag or short SHA (git rev-parse --short HEAD)
-      placeholder: e.g. 0.5.2 or a1b2c3d
-    validations:
-      required: true
-
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to reproduce
-      description: Exact steps, commands, and settings to trigger the bug
-      placeholder: |
-        1. …
-        2. …
-        3. …
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual behavior / screenshots
-    validations:
-      required: true
-
-  - type: textarea
-    id: logs
-    attributes:
-      label: Logs
-      description: |
-        Please attach relevant log excerpts from `logs/*_read_from_canbus_errors.log`.
-        Redact personal info if needed.
-      render: text
-
-  - type: textarea
-    id: extra
-    attributes:
-      label: Additional context
