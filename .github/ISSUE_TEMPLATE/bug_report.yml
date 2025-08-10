@@ -36,25 +36,25 @@ body:
     validations:
       required: true
 
-- type: dropdown
-  id: can_module
-  attributes:
-    label: CAN module / interface
-    options:
-      - PiCan2
-      - PiCan3
-      - vcan0 (virtual)
-      - Other / Unknown
-  validations:
-    required: true
-
-- type: input
-  id: can_module_other
-  attributes:
-    label: Specify CAN module
-    description: Please specify your CAN module if you selected "Other / Unknown" above.
-    placeholder: e.g., custom Arduino CAN interface
-  if: can_module == "Other / Unknown"
+  - type: dropdown
+    id: can_module
+    attributes:
+      label: CAN module / interface
+      options:
+        - PiCan2
+        - PiCan3
+        - vcan0 (virtual)
+        - Other / Unknown
+    validations:
+      required: true
+  
+  - type: input
+    id: can_module_other
+    attributes:
+      label: Specify CAN module
+      description: Please specify your CAN module if you selected "Other / Unknown" above.
+      placeholder: e.g., custom Arduino CAN interface
+    if: can_module == "Other / Unknown"
 
   - type: input
     id: version
