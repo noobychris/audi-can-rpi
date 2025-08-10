@@ -1,0 +1,50 @@
+name: "💡 Feature request"
+description: Suggest a new feature or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: ["noobychris"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature!  
+        Please provide as much detail as possible so we can understand your idea and evaluate it.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Short feature description
+      placeholder: e.g., Add support for Audi A6 C6 DIS/FIS display
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this feature needed?
+      description: Explain the problem this feature would solve or the benefit it would bring.
+      placeholder: e.g., This would allow more users with newer Audi models to use the script.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Detailed description
+      description: Describe your idea in detail, including how it should work.
+      placeholder: e.g., The script should detect the new model via CAN bus and adjust the display format automatically.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered other solutions or workarounds?
+      placeholder: e.g., Manual configuration changes, custom scripts.
+  
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Add any other context, diagrams, or references related to the request.
