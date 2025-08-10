@@ -19,7 +19,7 @@ body:
     id: summary
     attributes:
       label: Short problem description
-      placeholder: e.g., Script crashes when switching to TV mode
+      placeholder: e.g., Script crashes when switching to rpm
     validations:
       required: true
 
@@ -43,7 +43,7 @@ body:
     id: car_model_other
     attributes:
       label: Specify vehicle model (if "Other / Unknown")
-      placeholder: e.g., Audi A6 C5
+      placeholder: e.g., Audi A4 B6
 
   - type: dropdown
     id: rpi_model
@@ -62,7 +62,7 @@ body:
     id: rpi_model_other
     attributes:
       label: Specify Raspberry Pi model (if "Other / Unknown")
-      placeholder: e.g., Raspberry Pi 5
+      placeholder: e.g., Raspberry Pi 4 4GB
 
   - type: dropdown
     id: can_module
@@ -88,14 +88,14 @@ body:
     attributes:
       label: Function name or section causing the error (optional)
       description: If known, please specify the Python function, method, or section of the script where the error occurs.
-      placeholder: e.g., def read_canbus()
+      placeholder: e.g., def process_canid_351()
 
   - type: input
     id: version
     attributes:
       label: Script version / commit
       description: E.g. tag or short SHA (git rev-parse --short HEAD)
-      placeholder: e.g. 0.5.2 or a1b2c3d
+      placeholder: e.g. v0.9
     validations:
       required: true
 
