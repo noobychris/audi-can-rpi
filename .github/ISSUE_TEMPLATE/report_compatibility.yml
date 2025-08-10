@@ -3,6 +3,7 @@ description: Report a (partially) compatible vehicle
 title: "[Compatibility]"
 labels: ["compatibility", "triage"]
 assignees: ["noobychris"]
+
 body:
   - type: markdown
     attributes:
@@ -31,9 +32,9 @@ body:
   - type: input
     id: year
     attributes:
-      label: Year (optional)
+      label: Year
       description: e.g. "2004" (leave empty if unknown)
-      placeholder: "2004"
+      placeholder: 2004
 
   - type: dropdown
     id: dis_fis
@@ -98,9 +99,7 @@ body:
         `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`  
         Example: `2025_07_03-12:30:12_read_from_canbus_errors.log`
       placeholder: |
-        ```text
         2025-07-03 12:30:15,123 | INFO  | ... | CAN-Message with CAN-ID ...
-        ```
 
   - type: textarea
     id: notes
