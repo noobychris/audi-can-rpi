@@ -93,14 +93,14 @@ Note: The cars in the list should work based on candump analysis from this cars.
 Found a bug? Have an idea or question?  
 Your feedback helps improve this project!
 
-[![Report Bug](https://img.shields.io/badge/🐞%20Report%20Bug-red)](https://github.com/noobychris/audi-can-rpi/issues/new?labels=bug&template=bug_report.md)
-[![Request Feature](https://img.shields.io/badge/💡%20Request%20Feature-blue)](https://github.com/noobychris/audi-can-rpi/issues/new?labels=enhancement&template=feature_request.md)
+[![Report Bug](https://img.shields.io/badge/🐞%20Report%20Bug-red)](https://github.com/noobychris/audi-can-rpi/issues/new?template=bug_report.yml&labels=bug)
+[![Request Feature](https://img.shields.io/badge/💡%20Request%20Feature-blue)](https://github.com/noobychris/audi-can-rpi/issues/new?template=feature_request.yml&labels=enhancement)
 [![Join Discussions](https://img.shields.io/badge/💬%20Join%20Discussions-green)](https://github.com/noobychris/audi-can-rpi/discussions)
 
-- **🐞 Report a bug** – Use the [Bug Report form](https://github.com/noobychris/audi-can-rpi/issues/new?labels=bug&template=bug_report.md) to help us fix it quickly.
-- **💡 Request a feature** – Share your idea via the [Feature Request form](https://github.com/noobychris/audi-can-rpi/issues/new?labels=enhancement&template=feature_request.md).
+- **🐞 Report a bug** – Use the [Bug Report form](https://github.com/noobychris/audi-can-rpi/issues/new?template=bug_report.yml&labels=bug) to help us fix it quickly.
+- **💡 Request a feature** – Share your idea via the [Feature Request form](https://github.com/noobychris/audi-can-rpi/issues/new?template=feature_request.yml&labels=enhancement).
 - **💬 Join discussions** – Ask questions, share test results, or brainstorm in the [Discussions area](https://github.com/noobychris/audi-can-rpi/discussions).
-
+- 
 ---
 
 ### My Setup
