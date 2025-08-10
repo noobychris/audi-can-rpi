@@ -7,7 +7,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting! Please fill out the fields so we can reproduce the issue quickly.
+        ⚠️ **Before reporting a bug, please re-run your test with the following options enabled:**
+        ```python
+        ENABLE_LOGGING = True
+        show_can_messages_in_logs = True
+        ```
+        This will generate more detailed logs and speed up troubleshooting.
+        *(You can disable them again afterwards.)*
 
   - type: dropdown
     id: car_model
