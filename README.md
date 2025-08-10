@@ -87,7 +87,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Change day/night mode based on car lighting  
 - Send CAN Bus data to the OpenAuto Pro API for dashboard display  
 
-<img width="450" height="270" alt="Image" src="https://github.com/user-attachments/assets/01535419-f95a-4656-b91c-9c4fa2c4af94" />  &nbsp;&nbsp;&nbsp; <img width="450" height="270" alt="Image" src="https://github.com/user-attachments/assets/4f004626-ab8b-4a4a-9990-ed9ffc31d536" />
+<img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/01535419-f95a-4656-b91c-9c4fa2c4af94" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/4f004626-ab8b-4a4a-9990-ed9ffc31d536" />
 
 ---
 
