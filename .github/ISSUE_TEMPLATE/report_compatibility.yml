@@ -63,3 +63,47 @@ body:
   - type: textarea
     id: works
     attributes:
+      label: What works?
+      description: Short bullet points (e.g., “Track title display”, “Speed/RPM display”, “Day/night switching”)
+      placeholder: |
+        - Track title display in DIS/FIS
+        - Speed display
+        - Day/night switching
+
+  - type: textarea
+    id: not_working
+    attributes:
+      label: What does NOT (yet) work?
+      description: Please specify exact issues (e.g., “MFSW → skip track does nothing”)
+      placeholder: |
+        - MFSW button press does not work
+        - Outside temperature not displayed in DIS/FIS
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup / notes (optional)
+      description: Hardware/software setup that might be relevant (Raspberry Pi model, CAN interface, RNS-E/TV mode, OpenAuto Pro version, special codings)
+      placeholder: |
+        - Raspberry Pi 4 (4GB), PiCan3
+        - OpenAuto Pro vX.Y
+        - Script Settings: ENABLE_LOGGING=True, only_send_if_radio_is_in_tv_mode=True
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs/screenshots (optional)
+      description: |
+        If possible, attach relevant log excerpts:  
+        `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`  
+        Example: `2025_07_03-12:30:12_read_from_canbus_errors.log`
+      placeholder: |
+        ```text
+        2025-07-03 12:30:15,123 | INFO  | ... | CAN-Message with CAN-ID ...
+        ```
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes (optional)
+      placeholder: Anything that might help us assess compatibility (firmware, special codings, etc.)
