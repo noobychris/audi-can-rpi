@@ -48,17 +48,6 @@ body:
     validations:
       required: true
 
-  - type: checkboxes
-    id: toggles
-    attributes:
-      label: Relevant toggles/features
-      options:
-        - label: OpenAuto Pro features enabled
-        - label: RNS-E TV mode enabled
-        - label: Reverse camera enabled
-        - label: MFSW (steering wheel) in use
-        - label: Metric units (km/h, °C)
-
   - type: input
     id: version
     attributes:
@@ -102,12 +91,6 @@ body:
         Please attach relevant log excerpts from `logs/*_read_from_canbus_errors.log`.
         Redact personal info if needed.
       render: text
-
-  - type: input
-    id: os
-    attributes:
-      label: OS / Kernel
-      placeholder: e.g. Raspberry Pi OS (64-bit), kernel 6.6.x
 
   - type: textarea
     id: extra
