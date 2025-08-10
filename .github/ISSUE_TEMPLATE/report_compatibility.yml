@@ -1,0 +1,102 @@
+name: "🚗 Compatibility report"
+description: Melde ein (teilweise) kompatibles Fahrzeug
+title: "[Compatibility]: <Modell> <Typ> <Baujahr(optional)>"
+labels: ["compatibility", "triage"]
+assignees: ["noobychris"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fürs Mitmachen! Bitte fülle die Felder so genau wie möglich aus.
+        Für bessere Nachvollziehbarkeit helfen Logs sehr (siehe unten).
+
+  - type: input
+    id: model
+    attributes:
+      label: Modell
+      description: z. B. "Audi A4", "Audi A3", "Audi TT"
+      placeholder: Audi A4
+    validations:
+      required: true
+
+  - type: input
+    id: type
+    attributes:
+      label: Typ
+      description: z. B. "8E", "8P", "8J"
+      placeholder: 8E
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dis_fis
+    attributes:
+      label: DIS/FIS Ausgabe funktioniert?
+      options:
+        - "-- Please choose --"
+        - Yes
+        - No
+        - Not tested
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mfsw
+    attributes:
+      label: MFSW (Lenkradtasten) funktionieren?
+      options:
+        - "-- Please choose --"
+        - Yes
+        - No
+        - Not installed
+        - Not tested
+    validations:
+      required: true
+
+  - type: textarea
+    id: works
+    attributes:
+      label: Was funktioniert?
+      description: Kurz stichpunktartig (z. B. „Titelanzeige“, „Geschwindigkeit/RPM“, „Tag/Nacht-Umschaltung“)
+      placeholder: |
+        - Titelanzeige im FIS
+        - Geschwindigkeitsanzeige
+        - Tag/Nacht-Umschaltung
+
+  - type: textarea
+    id: not_working
+    attributes:
+      label: Was funktioniert (noch) nicht?
+      description: Bitte konkrete Punkte nennen (z. B. „MFSW → skip track hat keine Wirkung“)
+      placeholder: |
+        - MFSW „Down longpress“ triggert keine Umschaltung
+        - Außentemperatur wird nicht angezeigt
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup / Hinweise (optional)
+      description: Hardware/Software-Setup, das relevant sein könnte (Raspberry Pi Modell, CAN-Interface, RNS-E/TV-Modus, OpenAuto Pro Version, besondere Codierungen)
+      placeholder: |
+        - Raspberry Pi 4 (4GB), PiCan2, RNS-E mit TV-Modus aktiv
+        - OpenAuto Pro vX.Y
+        - Script Settings: ENABLE_LOGGING=True, only_send_if_radio_is_in_tv_mode=True
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevante Logs/Screenshots (optional)
+      description: |
+        Bitte, wenn möglich, Log-Auszüge anhängen:
+        `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`
+        Beispiel: `2025_07_03-12:30:12_read_from_canbus_errors.log`
+      placeholder: |
+        ```text
+        2025-07-03 12:30:15,123 | INFO  | ... | CAN-Message with CAN-ID ...
+        ```
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Zusätzliche Anmerkungen (optional)
+      placeholder: Alles, was uns beim Einordnen hilft (Firmware, Besonderheiten, Codierungen)
