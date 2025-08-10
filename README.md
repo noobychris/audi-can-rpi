@@ -1,4 +1,5 @@
-## Project
+# Audi CAN Bus to DIS/FIS via Raspberry Pi (with OpenAuto Pro support)
+
 This project/script is designed to display CAN bus data (speed, RPM, etc.) on the DIS/FIS using a Raspberry Pi. It also allows controlling the Raspberry Pi using the RNS-E buttons in TV mode. It also includes functions for OpenAuto Pro, which has unfortunately been discontinued.
 
 > **ℹ️ Note:**
@@ -6,7 +7,7 @@ This project/script is designed to display CAN bus data (speed, RPM, etc.) on th
 > 
 > This script is the result of years of work and runs very well in my own setup. However, I can only test it in my own car. In theory, it should work with other models as well. For this reason, I have created a table of compatible and tested models. Feedback after testing is highly appreciated so we can keep this table updated!
 
-I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It controls **OpenAuto Pro** (which is unfortunately discontinued). The OpenAuto Pro features in the script can be disabled, so the script will also run without it.
+I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It controls **OpenAuto Pro**. The OpenAuto Pro features in the script can be disabled, so the script will also run without it.
 
 ---
 
