@@ -18,29 +18,18 @@ The OpenAuto Pro features in the script can be disabled, so the script will also
 
 ## Main Features
 
-![Image](https://github.com/user-attachments/assets/f16e3018-3c32-4819-99f9-9a51ef2f099c)
+
 
 ### 1. Driver Information System (DIS/FIS) Text Output
 The script can write to the first two lines of the **DIS/FIS** (Driver Information System) in the instrument cluster.  
 It can overwrite existing text (e.g., from the radio) via the telephone channel.
 
-**Available data sources:**
+![Image](https://github.com/user-attachments/assets/f16e3018-3c32-4819-99f9-9a51ef2f099c) &nbsp;&nbsp;&nbsp; ![Image](https://github.com/user-attachments/assets/abfc84b0-341d-49f7-b662-1df58eaa0d3d)
 
-- **CAN Bus Data** (Infotainment Bus)  
-  - Speed  
-  - RPM  
-  - Coolant temperature (A4 8E only)
-  - Outside temperature
-  - CPU usage & temperature  
-  - Custom speed measurement value  
-  - Blank line (no content)  
+| **CAN Bus Data (Infotainment Bus)** | **OpenAuto Pro Media Info** |
+|-------------------------------------|-----------------------------|
+| - Speed<br>- RPM<br>- Coolant temperature (A4 8E only)<br>- Outside temperature<br>- CPU usage & temperature<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration <br> <br> <br> |
 
-- **OpenAuto Pro Media Info**  
-  - Title  
-  - Artist  
-  - Album  
-  - Song position  
-  - Song duration  
 
 **Alternative mode:**  
 It can also display only a single value in the FIS/DIS with a custom title.
@@ -56,7 +45,8 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 **Long press button support:**  
   - Long press UP/DOWN to cycle displayed FIS/DIS values  
-  - Very long press RETURN to start/stop `candump`  
+  - Very long press RETURN to start/stop `candump`
+  - Extreme long press SETUP (about 5s) to shutdown the raspberry pi   
   - More functions in the keymap file  [read_from_canbus_keymap.pdf](read_from_canbus_keymap.pdf)
 
 **MFSW (multi function steering wheel) support:**  
