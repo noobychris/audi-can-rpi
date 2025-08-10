@@ -2,7 +2,7 @@ name: "🐞 Bug report"
 description: Report a reproducible problem
 title: "[Bug]: "
 labels: ["bug", "triage"]
-assignees: []
+assignees: ["noobychris"]
 body:
   - type: markdown
     attributes:
