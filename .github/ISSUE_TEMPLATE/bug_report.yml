@@ -21,6 +21,7 @@ body:
         - Audi TT 8J
         - Audi R8 42
         - Other / Unknown
+      default: 0
     validations:
       required: true
 
@@ -39,6 +40,7 @@ body:
         - Raspberry Pi 3B+
         - Raspberry Pi 4 (2/4/8GB)
         - Other / Unknown
+      default: 2
     validations:
       required: true
 
@@ -57,6 +59,7 @@ body:
         - PiCan3
         - vcan0 (virtual)
         - Other / Unknown
+      default: 1
     validations:
       required: true
 
