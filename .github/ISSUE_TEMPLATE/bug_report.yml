@@ -1,0 +1,115 @@
+name: "🐞 Bug report"
+description: Report a reproducible problem
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please fill out all required fields so we can reproduce the issue quickly.
+
+  - type: dropdown
+    id: car_model
+    attributes:
+      label: Vehicle model
+      description: Select the tested model
+      options:
+        - Audi A4 8E (B6/B7)
+        - Audi A3 8L
+        - Audi A3 8P
+        - Audi TT 8J
+        - Audi R8 42
+        - Other / Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rpi_model
+    attributes:
+      label: Raspberry Pi
+      options:
+        - Raspberry Pi 3B
+        - Raspberry Pi 3B+
+        - Raspberry Pi 4 (2/4/8GB)
+        - Other / Unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: can_module
+    attributes:
+      label: CAN module / interface
+      options:
+        - PiCan2
+        - PiCan3
+        - vcan0 (virtual)
+        - Other / Unknown
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: toggles
+    attributes:
+      label: Relevant toggles/features
+      options:
+        - label: OpenAuto Pro features enabled
+        - label: RNS-E TV mode enabled
+        - label: Reverse camera enabled
+        - label: MFSW (steering wheel) in use
+        - label: Metric units (km/h, °C)
+
+  - type: input
+    id: version
+    attributes:
+      label: Script version / commit
+      description: E.g. tag or short SHA (git rev-parse --short HEAD)
+      placeholder: e.g. 0.5.2 or a1b2c3d
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps, commands, and settings to trigger the bug
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / screenshots
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Please attach relevant log excerpts from `logs/*_read_from_canbus_errors.log`.
+        Redact personal info if needed.
+      render: text
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / Kernel
+      placeholder: e.g. Raspberry Pi OS (64-bit), kernel 6.6.x
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
