@@ -60,6 +60,12 @@ It can also display only a single value in the FIS/DIS with a custom title.
   - Very long press RETURN to start/stop `candump`  
   - More functions in the keymap file  
 
+**MFSW (multi function steering wheel) support:**  
+- The script does support MFSW support but:
+  - MFSW is most likely in conflict with hands free control
+  - I recommend to uncode and/or remove hands free hardware to use MFSW with this script
+  - Otherwise you will controll the script and hands free at the same time
+
 **Reverse camera support:**  
   - Activate PiCamera when reverse gear is detected via CAN Bus  
   - Optional guidelines overlay  
@@ -95,6 +101,22 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Send CAN Bus data to the OpenAuto Pro API for dashboard display  
 
 ---
+
+### 3. Compabillity
+
+| Model        | DIS/FIS Output | MFSW* | Note |
+|--------------|----------------|-------|------|
+| Audi A4 8E   | ✅              | ❓     |      |
+| Audi A3 8L   | ❓              | ❓     |      |
+| Audi A3 8P   | ❓              | ❓     |      |
+| Audi TT 8J   | ❓              | ❓     |      |
+| Audi R8 42   | ❓              | ❓     |      |
+
+\* MFSW = Multi Function Steering Wheel
+
+Note: The cars in the list should work based on candump analysis from this cars. It could be work on more cars, if the can messages are the same.
+
+--
 
 ## My Setup
 
