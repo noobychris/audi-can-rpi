@@ -59,7 +59,7 @@ body:
       label: What works?
       description: Short bullet points (e.g., “Track title display”, “Speed/RPM display”, “Day/night switching”)
       placeholder: |
-        - Track title display in FIS
+        - Track title display in DIS/FIS
         - Speed display
         - Day/night switching
 
@@ -69,8 +69,8 @@ body:
       label: What does NOT (yet) work?
       description: Please specify exact issues (e.g., “MFSW → skip track does nothing”)
       placeholder: |
-        - MFSW “Down longpress” does not switch values
-        - Outside temperature not displayed
+        - MFSW button press does not work
+        - Outside temperature not displayed in DIS/FIS
 
   - type: textarea
     id: setup
@@ -78,7 +78,7 @@ body:
       label: Setup / notes (optional)
       description: Hardware/software setup that might be relevant (Raspberry Pi model, CAN interface, RNS-E/TV mode, OpenAuto Pro version, special codings)
       placeholder: |
-        - Raspberry Pi 4 (4GB), PiCan2, RNS-E with TV mode enabled
+        - Raspberry Pi 4 (4GB), PiCan3
         - OpenAuto Pro vX.Y
         - Script Settings: ENABLE_LOGGING=True, only_send_if_radio_is_in_tv_mode=True
 
