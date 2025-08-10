@@ -1,44 +1,64 @@
-name: Auto-title Compatibility Issues
+# .github/workflows/auto-title-compatibility.yml
+name: Auto Title for Compatibility Issues
+
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled]
+
+permissions:
+  issues: write
 
 jobs:
-  auto_title:
-    if: contains(join(github.event.issue.labels.*.name, ','), 'compatibility')
+  retitle:
+    # Run only if the issue has the "compatibility" label
+    if: contains(toJson(github.event.issue.labels), '"compatibility"')
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-      - name: Build dynamic title from form fields
+      - name: Build title from form fields
         uses: actions/github-script@v7
         with:
           script: |
             const issue = context.payload.issue;
             const body = issue.body || '';
 
-            function extract(label) {
-              const re = new RegExp(`###\\s+${label}[\\r\\n]+([\\s\\S]*?)(?:\\r?\\n\\r?\\n|$)`, 'i');
+            // Extract the first non-empty line after a "### Heading" section
+            function extractByHeading(label) {
+              const re = new RegExp(`(?:^|\\n)\\s*###\\s*${label}\\s*\\n([\\s\\S]*?)(?=\\n###|$)`, 'i');
               const m = body.match(re);
               if (!m) return '';
-              // take first non-empty line
-              const firstLine = m[1].split('\n').map(s => s.trim()).find(Boolean) || '';
-              return firstLine.replace(/^"|"$/g, '').trim();
+              return m[1]
+                .split('\n')
+                .map(l => l.replace(/^>\s?/, '').trim())
+                .filter(Boolean)[0] || '';
             }
 
-            const model = extract('Model');
-            const type  = extract('Type');
-            const year  = extract('Year \\(optional\\)');
-
-            const parts = [model, type, year].filter(Boolean);
-            if (parts.length) {
-              const newTitle = `[Compatibility]: ${parts.join(' ')}`;
-              if (issue.title !== newTitle) {
-                await github.rest.issues.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue.number,
-                  title: newTitle
-                });
+            // Try multiple label variants to be resilient to wording changes
+            function pick(...labels) {
+              for (const l of labels) {
+                const v = extractByHeading(l);
+                if (v) return v;
               }
+              return '';
+            }
+
+            const model = pick('Model', 'Vehicle model', 'Modell');
+            const type  = pick('Type', 'Typ');
+            const year  = pick('Year', 'Year \\(optional\\)', 'Baujahr');
+
+            core.info(`Parsed → Model: "${model}", Type: "${type}", Year: "${year}"`);
+
+            // Assemble title
+            const parts = [model, type, year].filter(Boolean).join(' ').trim();
+            const newTitle = parts ? `[Compatibility]: ${parts}` : '[Compatibility]: Report';
+
+            if (issue.title !== newTitle) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                title: newTitle
+              });
+              core.info(`Title updated to: ${newTitle}`);
+            } else {
+              core.info('Title already matches; no change.');
             }
