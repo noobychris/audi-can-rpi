@@ -15,6 +15,14 @@ body:
         This will generate more detailed logs and speed up troubleshooting.
         *(You can disable them again afterwards.)*
 
+- type: input
+  id: summary
+  attributes:
+    label: Short problem description
+    placeholder: e.g., Script crashes when switching to TV mode
+  validations:
+    required: true
+
   - type: dropdown
     id: car_model
     attributes:
