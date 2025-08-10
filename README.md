@@ -18,6 +18,8 @@ The OpenAuto Pro features in the script can be disabled, so the script will also
 
 ## Main Features
 
+![Image](https://github.com/user-attachments/assets/f16e3018-3c32-4819-99f9-9a51ef2f099c)
+
 ### 1. Driver Information System (DIS/FIS) Text Output
 The script can write to the first two lines of the **DIS/FIS** (Driver Information System) in the instrument cluster.  
 It can overwrite existing text (e.g., from the radio) via the telephone channel.
