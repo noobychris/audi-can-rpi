@@ -76,6 +76,13 @@ body:
       placeholder: e.g., custom Arduino CAN interface
 
   - type: input
+    id: function_name
+    attributes:
+      label: Function name or section causing the error (optional)
+      description: If known, please specify the Python function, method, or section of the script where the error occurs.
+      placeholder: e.g., def read_canbus()
+
+  - type: input
     id: version
     attributes:
       label: Script version / commit
