@@ -89,7 +89,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 ---
 
-### 3. Compabillity
+### 4. Compabillity
 
 | Model        | DIS/FIS Output | MFSW | Note |
 |--------------|----------------|-------|------|
@@ -105,9 +105,9 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 Note: The cars in the list should work based on candump analysis from this cars. It could be work on more cars, if the can messages are the same.
 
---
+---
 
-## My Setup
+### My Setup
 
 - Audi A4 B6 (8E) Avant 2001  
 - Seat Exeo RNS-E 3R0 035 192  
