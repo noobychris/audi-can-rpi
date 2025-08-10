@@ -125,8 +125,6 @@ body:
         Please attach relevant log excerpts from `script_folder/logs/DATE_TIME_read_from_canbus_errors.log`  
         Example: `2025_07_03-12:30:12_read_from_canbus_errors.log`  
         Redact personal info if needed.
-    render: shell
-
 
   - type: textarea
     id: extra
