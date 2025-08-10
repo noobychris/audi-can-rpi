@@ -11,6 +11,24 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 ---
 
+## Installation Guide
+
+1. Copy `read_from_canbus.py` to your Raspberry Pi, preferably in a new folder called `scripts`.
+
+2. If you are using the reverse camera feature, also copy the file `lines.png` to the same folder.
+
+3. Make the script executable:
+   ```bash
+   chmod +x read_from_canbus.py
+   ```
+
+4. The files in the `.openauto/config` folder are only required if you want to send data like **Speed** or **RPM** to the OpenAuto Pro dashboard interface.
+
+5. The first start of the script should be done **with an active internet connection** so that all required Python modules and dependencies can be installed automatically.
+
+---
+
+
 ## Main Features
 
 
