@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Project on GitHub: https://github.com/noobychris/audi-can-rpi
-# Version 0.9 of the Script
+script_version = "v0.9"
 
 #  Enable here the functions you want to use
 #########################################################
@@ -13,7 +13,7 @@ welcome_message_1st_line = 'WELCOME'                    # Welcome message 1st li
 welcome_message_2nd_line = 'USER'                       # Welcome message 2nd line on script startup. Max 8 digits.
                                                         #
 send_on_canbus = True                                   # True/False = the script will send/not send on canbus.
-only_send_if_radio_is_in_tv_mode = True                 # True/False = script will just send if rns-e is in tv mode.
+only_send_if_radio_is_in_tv_mode = False                 # True/False = script will just send if rns-e is in tv mode.
                                                         #
 activate_rnse_tv_input = False                          # Send the TV input activation message if you don't have an IMA.
 tv_input_format = 'NTSC'                                # Select if you know your video input format. 'PAL' or 'NTSC'
@@ -62,10 +62,11 @@ show_can_messages_in_logs = False                       # please set to "true" i
 # 1 = title, 2 = artist, 3 = album, 4 = song position, 5 = song duration, 6 = speed, 7 = rpm, 8 = coolant
 # 9 = cpu/temp, 10 = speed measure, 11 = outside temp, # 12 = blank line, 13 = disable sending to dis/fis
 
-
 # If you have any trouble with the script, you can enable LOGGING_OUTPUT to get more information's about exceptions.
 # The messages will be saved in the script/logs folder with date, name of the script.
 # Example: 2023-02-01_read_from_canbus_errors.log
+
+
 
 import sys, os, logging, threading, time, binascii, textwrap, asyncio, importlib.util
 import zipfile, io, shutil, inspect, traceback, configparser
@@ -384,10 +385,52 @@ async def ensure_python_3_13_5():
             sys.exit(1)
 
 
-async def script_starting():
+async def start_script():
     logger.info("")
-    logger.info("Script is starting...")
+    logger.info(f"Script is starting...")
     logger.info("")
+    logger.info(f"Script Version: {script_version}")
+    logger.info(f"Logging enabled: {ENABLE_LOGGING}")
+    if ENABLE_LOGGING:
+        config_vars = {
+            "can_interface": can_interface,
+            "welcome_message_1st_line": welcome_message_1st_line,
+            "welcome_message_2nd_line": welcome_message_2nd_line,
+            "send_on_canbus": send_on_canbus,
+            "only_send_if_radio_is_in_tv_mode": only_send_if_radio_is_in_tv_mode,
+            "activate_rnse_tv_input": activate_rnse_tv_input,
+            "tv_input_format": tv_input_format,
+            "show_label": show_label,
+            "toggle_fis1": toggle_fis1,
+            "toggle_fis2": toggle_fis2,
+            "scroll_type": scroll_type,
+            "read_and_set_time_from_dashboard": read_and_set_time_from_dashboard,
+            "control_pi_by_rns_e_buttons": control_pi_by_rns_e_buttons,
+            "send_values_to_dashboard": send_values_to_dashboard,
+            "toggle_values_by_rnse_longpress": toggle_values_by_rnse_longpress,
+            "reversecamera_by_reversegear": reversecamera_by_reversegear,
+            "reversecamera_by_down_longpress": reversecamera_by_down_longpress,
+            "reversecamera_guidelines": reversecamera_guidelines,
+            "reversecamera_turn_off_delay": reversecamera_turn_off_delay,
+            "shutdown_by_ignition_off": shutdown_by_ignition_off,
+            "shutdown_by_pulling_key": shutdown_by_pulling_key,
+            "shutdown_type": shutdown_type,
+            "initial_day_night_mode": initial_day_night_mode,
+            "change_dark_mode_by_car_light": change_dark_mode_by_car_light,
+            "send_oap_api_mediadata_to_dashboard": send_oap_api_mediadata_to_dashboard,
+            "send_to_oap_gauges": send_to_oap_gauges,
+            "lower_speed": lower_speed,
+            "upper_speed": upper_speed,
+            "export_speed_measurements_to_file": export_speed_measurements_to_file,
+            "speed_unit": speed_unit,
+            "temp_unit": temp_unit
+        }
+
+        logger.info("")
+        logger.info("✅ Current Configuration:")
+        for name, value in config_vars.items():
+            logger.info("   • %s = %s", name, value)
+        logger.info("")
 
 
 server_socket = None
@@ -404,7 +447,9 @@ async def remote_control(host='localhost', port=12345):
 
         server = await asyncio.start_server(handle_client, host, port)
         server_socket = server
-        logger.info(f"Remote control server started on {host}:{port}")
+        if ENABLE_LOGGING:
+            logger.info(f"✅ Remote control server started on {host}:{port}")
+
 
         # 🆕 Create an explicit server task.
         serve_task = asyncio.create_task(server.serve_forever())
@@ -434,9 +479,9 @@ async def remote_control(host='localhost', port=12345):
             try:
                 server_socket.close()
                 await server_socket.wait_closed()
-                logger.info("✅ Remote server socket closed.")
+                logger.info("⚠️ Remote server socket closed.")
             except Exception as e:
-                logger.warning(f"⚠️ Error closing socket: {e}")
+                logger.warning(f"❌ Error closing socket: {e}")
             server_socket = None
         remote_server_shutdown_event.clear()  # <– important!
 
@@ -529,25 +574,25 @@ async def stop_other_instance(script_name):
     pids = await get_other_pids(script_name)
     if not pids:
         if ENABLE_LOGGING:
-            logger.info("No other script instances running.")
+            logger.info("✅ No other script instances running.")
         return False
 
-    logger.info(f"Detected other running script instance(s): {pids} → sending 'stop_script'")
+    logger.info(f"⚠️ Detected other running script instance(s): {pids} → sending 'stop_script'")
     await send_command("localhost", 12345, "stop_script")
 
     if await wait_for_stop(script_name):
-        logger.info("Other running script instance(s) shut down gracefully.")
+        logger.info("✅ Other running script instance(s) shut down gracefully.")
         logger.info("")
         return False
 
-    logger.warning("No response from other running script instance(s) – sending SIGTERM...")
+    logger.warning("⚠️ No response from other running script instance(s) – sending SIGTERM...")
     for pid in pids:
         await run_command(f"kill -15 {pid}")
     await asyncio.sleep(1)
 
     remaining = await get_other_pids(script_name)
     for pid in remaining:
-        logger.warning(f"PID {pid} still running – sending SIGKILL")
+        logger.warning(f"⚠️ PID {pid} still running – sending SIGKILL")
         await run_command(f"kill -9 {pid}")
     return True
 
@@ -555,7 +600,7 @@ async def is_script_running(script_name):
     try:
         return await stop_other_instance(script_name)
     except Exception as e:
-        logger.error("Error checking for running script instances", exc_info=True)
+        logger.error("❌ Error checking for running script instances", exc_info=True)
         return False
 
 FIS1, FIS2, speed, rpm, coolant, playing, position, source, title, artist, album, state = '265', '267', 0, 0, 0, '', '', '', '', '', '', None
@@ -566,7 +611,7 @@ can_functional, guidelines_set, camera_active, cpu_load, cpu_temp, cpu_freq_mhz 
 _cached_metadata = None
 
 
-async def ensure_importlib_metadata(logger=None):
+async def ensure_importlib(logger=None):
     global _cached_metadata
     if _cached_metadata:
         return _cached_metadata
@@ -574,7 +619,7 @@ async def ensure_importlib_metadata(logger=None):
     try:
         from importlib.metadata import version, PackageNotFoundError
         _cached_metadata = (version, PackageNotFoundError)
-        if logger:
+        if logger and ENABLE_LOGGING:
             logger.info("Using importlib.metadata (stdlib)")
         return _cached_metadata
     except ImportError:
@@ -583,9 +628,9 @@ async def ensure_importlib_metadata(logger=None):
     # Check if the backport module is installed
     if importlib.util.find_spec("importlib_metadata") is None:
         if logger:
-            logger.warning("Backport 'importlib_metadata' missing. Attemping to install it...")
+            logger.warning("⚠️ Backport 'importlib_metadata' missing. Attemping to install it...")
         else:
-            logger.info("Backport 'importlib_metadata' missing. Attemping to install it...")
+            logger.info("⚠️ Backport 'importlib_metadata' missing. Attemping to install it...")
 
         process = await asyncio.create_subprocess_exec(
             sys.executable, "-m", "pip", "install", "--user", "importlib-metadata",
@@ -597,21 +642,21 @@ async def ensure_importlib_metadata(logger=None):
         if process.returncode != 0:
             error_msg = stderr.decode().strip()
             if logger:
-                logger.error(f"Installation from importlib-metadata failed: {error_msg}")
-            raise RuntimeError("Installation from 'importlib-metadata' failed")
+                logger.error(f"❌ Installation from importlib-metadata failed: {error_msg}")
+            raise RuntimeError("❌ Installation from 'importlib-metadata' failed")
 
         if logger:
-            logger.info("importlib-metadata successfully installed.")
+            logger.info("✅ importlib-metadata successfully installed.")
 
     # It should now be available
     try:
         from importlib_metadata import version, PackageNotFoundError
         _cached_metadata = (version, PackageNotFoundError)
-        if logger:
+        if logger and ENABLE_LOGGING:
             logger.info("Using importlib_metadata (backport)")
         return _cached_metadata
     except ImportError:
-        raise RuntimeError("Could not import 'importlib_metadata' after installation.")
+        raise RuntimeError("❌ Could not import 'importlib_metadata' after installation.")
 
 
 async def check_python():
@@ -761,6 +806,7 @@ async def python_modules():
         for mod in missing_modules:
             logger.warning("   • %s", mod)
     else:
+        logger.info("")
         logger.info("✅ All required python3 (pip) modules are installed.")
         logger.info("")
 
@@ -1009,7 +1055,7 @@ async def test_can_interface():
                     can_filters=can_filters,
                     receive_own_messages=False
                 )
-                logger.info("CAN-Interface 'vcan0' found and opened.")
+                logger.info("✅ CAN-Interface 'vcan0' found and opened.")
                 result = await run_command(f'sudo ifconfig {can_interface} txqueuelen 1000', log_output=False)
                 if result["stderr"]:
                     logger.error(f"Failed to set txqueuelen for vcan0: {result['stderr']}")
@@ -1046,27 +1092,27 @@ async def test_can_interface():
                     can_filters=can_filters,
                     receive_own_messages=False
                 )
-                logger.info(f"CAN-Interface '{can_interface}' found and opened.")
+                logger.info(f"✅ CAN-Interface '{can_interface}' found and opened.")
             except can.CanError as e:
-                logger.error(f"Failed to initialize CAN-Bus on {can_interface}. Error: {e}")
+                logger.error(f"❌ Failed to initialize CAN-Bus on {can_interface}. Error: {e}")
                 return
         if bus is not None:
             received_message = bus.recv(timeout=1.0)  # Timeout in seconds (non-blocking)
             if received_message is not None or can_interface == 'vcan0':
-                logger.info("CAN message received. CAN-Bus seems to be working.")
+                logger.info("✅ CAN message received. CAN-Bus seems to be working.")
                 logger.info("")
                 can_functional = True
             else:
-                logger.warning("No CAN message received. Disabling CAN-Bus communication.")
+                logger.warning("⚠️ No CAN message received. Disabling CAN-Bus communication.")
         else:
-            logger.error("CAN-Bus initialization failed, no bus object available.")
+            logger.error("❌ CAN-Bus initialization failed, no bus object available.")
     except FileNotFoundError:
         logger.error("File not found!", exc_info=True)
     except Exception as e:
-        logger.error(f"Error while testing the CAN interface: {e}", exc_info=True)
+        logger.error(f"❌ Error while testing the CAN interface: {e}", exc_info=True)
     finally:
         if not can_functional and bus is None:
-            logger.error("Failed to initialize CAN-Bus. Disabling CAN-Bus features.")
+            logger.error("❌ Failed to initialize CAN-Bus. Disabling CAN-Bus features.")
             send_on_canbus = False
 
 
@@ -1346,12 +1392,11 @@ def define_event_handler_class():
             self.client = client  # ✅ important – take over the new client!
 
             logger.info("")
-            logger.info("Received OpenAuto Pro hello response from OAP API")
+            logger.info("✅ Received OpenAuto Pro hello response from OAP API")
             logger.info(f"oap version: {message.oap_version.major}.{message.oap_version.minor}")
             logger.info(f"api version: {message.api_version.major}.{message.api_version.minor}")
             if message.api_version.minor == 1:
-                logger.warning(
-                    "⚠️ API reports version 1.1, but GitHub release claims 1.2. Possibly outdated constant in proto file.")
+                logger.warning("⚠️  API reports version 1.1, but GitHub release claims 1.2. Possibly outdated constant in proto file.")
             logger.info("")
 
             set_status_subscriptions = oap_api.SetStatusSubscriptions()
@@ -1443,10 +1488,11 @@ def define_event_handler_class():
                     return
                 caller = inspect.stack()[2]
                 caller_info = f"{caller.function} (line {caller.lineno})"
-                logger.info(
-                    f"Sending formula: {formula} Variable: {variable_name} Value: {variable} ← from {caller_info}")
+                if ENABLE_LOGGING:
+                    logger.info(
+                        f"Sending formula: {formula} Variable: {variable_name} Value: {variable} ← from {caller_info}")
 
-                # logger.info(f"Sending formula: {formula} Variable: {variable_name} Value: {variable}")
+                    # logger.info(f"Sending formula: {formula} Variable: {variable_name} Value: {variable}")
                 msg = oap_api.ObdInjectGaugeFormulaValue()
                 msg.formula = formula
                 msg.value = variable
@@ -1456,7 +1502,9 @@ def define_event_handler_class():
                         if ProjectionState in (1, 3) and ProjectionSource == 0 and tv_mode_active == 1:
                             self.client.send(oap_api.MESSAGE_OBD_INJECT_GAUGE_FORMULA_VALUE, 0, msg.SerializeToString())
                         else:
-                            logger.info(f"OpenAuto Pro is not in foreground or rns-e is not in tv_mode, skipping sending to oap api (exept outside temperature for 8E only).")
+                            if ENABLE_LOGGING:
+                                logger.info(f"⚠️ OpenAuto Pro is not in foreground or rns-e is not in tv_mode, skipping sending to oap api (exept outside temperature for 8E only).")
+
                 except BrokenPipeError as e:
                     logger.error(f"Broken pipe from {caller_info}: {e}")
                     # logger.error(f"Broken pipe: {e}")
@@ -1474,10 +1522,10 @@ def define_event_handler_class():
                         except Exception as e2:
                             logger.warning(f"Exception during disconnect: {e2}")
                     finally:
-                        logger.warning("Lost connection to OAP API – will trigger reconnect.")
+                        logger.warning("⚠️ Lost connection to OAP API – will trigger reconnect.")
 
             except Exception as e:
-                logger.error(f"update_to_api failed: {e}", exc_info=True)
+                logger.error(f"❌ update_to_api failed: {e}", exc_info=True)
 
         @handle_errors
         def outside_to_oap_api(self, outside_temp_int):
@@ -1519,7 +1567,8 @@ def define_event_handler_class():
             last_cpu_temp = None
             last_cpu_freq_mhz = None
             last_cpu_load = None
-            logger.info("read_cpu started")
+            if ENABLE_LOGGING:
+                logger.info("read_cpu started")
             while not stop_flag:
 
                 if send_to_oap_gauges or 9 in (toggle_fis1, toggle_fis2):
@@ -1655,7 +1704,7 @@ async def oap_api_con(event: asyncio.Event = None):
             await asyncio.get_running_loop().run_in_executor(None, client.connect, '127.0.0.1', 44405)
 
             logger.info("")
-            logger.info("Successfully connected to OpenAuto Pro API.")
+            logger.info("✅ Successfully connected to OpenAuto Pro API.")
             await asyncio.sleep(0.5)
             oap_api_is_connected = True
 
@@ -1676,7 +1725,7 @@ async def oap_api_con(event: asyncio.Event = None):
                     break
 
         except asyncio.CancelledError:
-            logger.info("❗ oap_api_con wurde abgebrochen.")
+            logger.info("❌ oap_api_con wurde abgebrochen.")
             break
 
         except struct.error as se:
@@ -1687,17 +1736,17 @@ async def oap_api_con(event: asyncio.Event = None):
             await asyncio.sleep(reconnect_delay)
 
         except ConnectionRefusedError:
-            logger.warning("OpenAuto Pro API is not running or unreachable.")
+            logger.warning("⚠️ OpenAuto Pro API is not running or unreachable.")
             if not can_functional:
                 stop_flag = True
-                logger.warning("No CAN-BUS and no OAP-API available. Stopping script...")
+                logger.warning("⚠️ No CAN-BUS and no OAP-API available. Stopping script...")
                 asyncio.create_task(stop_script())
             else:
                 oap_api_is_connected = False
                 await asyncio.sleep(reconnect_delay)
 
         except Exception as e:
-            logger.error("Unexpected error in oap_api_con", exc_info=True)
+            logger.error("❌ Unexpected error in oap_api_con", exc_info=True)
             oap_api_is_connected = False
             await asyncio.sleep(reconnect_delay)
 
@@ -1706,10 +1755,10 @@ async def oap_api_con(event: asyncio.Event = None):
                 try:
                     await asyncio.get_running_loop().run_in_executor(None, client.disconnect)
                     logger.info("")
-                    logger.info("Successfully disconnected from OAP API.")
+                    logger.info("✅ Successfully disconnected from OAP API.")
                     logger.info("")
                 except Exception as e:
-                    logger.warning("Error while disconnecting from OAP API", exc_info=True)
+                    logger.warning("❌ Error while disconnecting from OAP API", exc_info=True)
             oap_api_is_connected = False
 
 
@@ -2920,13 +2969,13 @@ async def main():
         #check if script is running with python3.13.5. If not, start install_python_3_13_5(), set_python3_alias(), restart_with_python_3_13_5()
         await ensure_python_3_13_5()
         #console output "Script is starting..."
-        await script_starting()
+        await start_script()
+        #check and output python3 version and interpreter
+        await check_python()
         #check if the script is already running. If so, kill the old istance(s)
         await is_script_running(script_filename)
         #check importlib.metadata import with fallback
-        version, PackageNotFoundError = await ensure_importlib_metadata(logger)
-        #check and output python3 version and interpreter
-        await check_python()
+        version, PackageNotFoundError = await ensure_importlib(logger)
         #check for missing python3 (pip) packages. If missing, install them.
         installed_modules, missing_modules = await python_modules()
         await install_missing(missing_modules)
