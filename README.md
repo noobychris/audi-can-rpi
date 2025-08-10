@@ -104,7 +104,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 ✅ = Tested and working  
 ⚠️ = Not yet tested / uncertain 
 
-Note: The cars in the list should work based on candump analysis from this cars. It could be work on more cars, if the can messages are the same.
+Note: The cars in the list should work based on candump analysis from this cars. It could work in more cars, if the can messages are the same.
 
 ---
 
