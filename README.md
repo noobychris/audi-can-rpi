@@ -50,12 +50,12 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Automatically install all required packages on first start  
   - Including PiCan2 and PiCan3 setup  
 - Enable/disable all features individually  
-- Control the Raspberry Pi using RNS-E radio buttons (see `read_from_canbus_keymap.pdf`)  
+- Control the Raspberry Pi using RNS-E radio buttons ([read_from_canbus_keymap.pdf](read_from_canbus_keymap.pdf))
 
 **Long press button support:**  
   - Long press UP/DOWN to cycle displayed FIS/DIS values  
   - Very long press RETURN to start/stop `candump`  
-  - More functions in the keymap file  
+  - More functions in the keymap file  [read_from_canbus_keymap.pdf](read_from_canbus_keymap.pdf)
 
 **MFSW (multi function steering wheel) support:**  
 - The script does support MFSW support but:
