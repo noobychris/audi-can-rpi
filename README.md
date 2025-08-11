@@ -11,7 +11,7 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 ---
 
-## to do list
+## To-do list
 
 1. check compability with hudiy (https://hudiy.eu)
 2. output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)
