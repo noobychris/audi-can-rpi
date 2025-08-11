@@ -73,7 +73,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
   - Switch metric/imperial units (km/h ↔ mph, °C ↔ °F)
   - Debug logging for troubleshooting
 - **RNS-E TV Mode Control**
-  - Switch input format (PAL/NTSC)
+  - Switch tv input activation format (PAL/NTSC)
   - Useful for custom video without IMA
   - Recommended firmware: [link](https://rnse.pcbbc.co.uk/index.php)
 ---
