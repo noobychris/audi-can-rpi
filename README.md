@@ -97,15 +97,13 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 ### 4. Compabillity &nbsp;&nbsp;&nbsp; [![Report Compatibility](https://img.shields.io/badge/🚗%20Report%20Compatibility-orange)](https://github.com/noobychris/audi-can-rpi/issues/new?labels=compatibility&template=report_compatibility.yml)
 
-| Model        | DIS/FIS Output | MFSW | Note |
-|--------------|----------------|-------|------|
-| Audi A4 8E   | ✅              | ⚠️     |      |
-| Audi A3 8L   | ⚠️              | ⚠️     |      |
-| Audi A3 8P   | ⚠️              | ⚠️     |      |
-| Audi TT 8J   | ⚠️              | ⚠️     |      |
-| Audi R8 42   | ⚠️              | ⚠️     |      |
-
-
+| Model        | DIS/FIS Output | MFSW | Outside Temp | Note |
+|--------------|----------------|------|--------------|------|
+| Audi A4 8E   | ✅              | ⚠️    | ✅           |      |
+| Audi A3 8L   | ⚠️              | ⚠️    | ⚠️           |      |
+| Audi A3 8P   | ⚠️              | ⚠️    | ⚠️           |      |
+| Audi TT 8J   | ⚠️              | ⚠️    | ⚠️           |      |
+| Audi R8 42   | ⚠️              | ⚠️    | ⚠️           |      |
 
 **Legend:**  
 ✅ = Tested and working  
