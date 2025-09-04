@@ -126,7 +126,7 @@ Your feedback helps improve this project!
 
 - **🐞 Report a bug** – Use the [Bug Report form](https://github.com/noobychris/audi-can-rpi/issues/new?template=bug_report.yml&labels=bug) to help us fix it quickly.
 - **💡 Request a feature** – Share your idea via the [Feature Request form](https://github.com/noobychris/audi-can-rpi/issues/new?template=feature_request.yml&labels=enhancement).
-- - **🚗 Report compatibility** –  Report a (partially) compatible model via the [Compatibility-Formular](https://github.com/noobychris/audi-can-rpi/issues/new?labels=compatibility&template=report_compatibility.yml).
+- **🚗 Report compatibility** –  Report a (partially) compatible model via the [Compatibility-Formular](https://github.com/noobychris/audi-can-rpi/issues/new?labels=compatibility&template=report_compatibility.yml).
 - **❓ Ask a question** – Use the [Question form](https://github.com/noobychris/audi-can-rpi/issues/new?template=question.yml&labels=question) for setup help, usage tips, or troubleshooting advice.
 - **💬 Join discussions** – Ask broader questions, share test results, or brainstorm in the [Discussions area](https://github.com/noobychris/audi-can-rpi/discussions).
 
