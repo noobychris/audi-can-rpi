@@ -26,7 +26,7 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 3. Make the script executable:
    ```bash
-   chmod +x read_from_canbus.py
+   sudo chmod +x read_from_canbus.py
    ```
 
 4. The files in the `.openauto/config` folder are only required if you want to send data like **Speed** or **RPM** to the OpenAuto Pro dashboard interface.
