@@ -13,9 +13,11 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 ## To-do list
 
-1. check compability with hudiy (https://hudiy.eu)
-2. show navigation hints in the fis/dis
-3. ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has alredy did that, it's quiet to complex for me to get this done
+✅ check compability with hudiy (https://hudiy.eu)
+
+📝 show navigation hints in the fis/dis
+
+❌ ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has already did that, it's quiet to complex for me to get this done
 
 ---
 
