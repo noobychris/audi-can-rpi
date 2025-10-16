@@ -15,6 +15,8 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 ✅ check compability with hudiy (https://hudiy.eu)
 
+📝 test the hudiy implementation some days in the car
+
 📝 show navigation hints in the fis/dis
 
 ❌ ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has already did that, it's quiet to complex for me to get this done
