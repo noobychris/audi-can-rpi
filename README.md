@@ -1,31 +1,38 @@
-# Audi CAN Bus to DIS/FIS via Raspberry Pi (with OpenAuto Pro support)
+# Audi CAN Bus to DIS/FIS via Raspberry Pi (with Hudiy AND OpenAuto Pro support)
 
-This project/script is designed to display CAN bus data (speed, RPM, etc.) on the DIS/FIS using a Raspberry Pi. It also allows controlling the Raspberry Pi using the RNS-E buttons in TV mode. It also includes functions for OpenAuto Pro, which has unfortunately been discontinued.
+This project/script is designed to display CAN bus data (speed, RPM, etc.) on the DIS/FIS using a Raspberry Pi. It also allows controlling the Raspberry Pi using the RNS-E buttons in TV mode. It also includes functions for Hudiy AND OpenAuto Pro (which has unfortunately been discontinued).
 
 > **ℹ️ Note:**
 > I'm not a professional developer – most of my knowledge is self-taught. I designed this script so that almost all functions can be activated or deactivated individually. My goal was to make the script install all missing components (e.g., Python modules) automatically so minimal prior knowledge is required.
 > 
 > This script is the result of years of work and runs very well in my own setup. However, I can only test it in my own car. In theory, it should work with other models as well. For this reason, I have created a table of compatible and tested models. Feedback after testing is highly appreciated so we can keep this table updated!
 
-I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It controls **OpenAuto Pro**. The OpenAuto Pro features in the script can be disabled, so the script will also run without it.
+I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It controls **Hudiy/OpenAuto Pro**. The Hudiy/OpenAuto Pro features in the script can be disabled, so the script will also run without it.
+
+---
+
+## Software/OS Compability
+
+| Hudiy | OpenAuto Pro | Raspberry Pi OS Buster | Raspberry Pi OS Bookworm | Raspberry Pi OS Trixie |
+|-------|--------------|------------------------|--------------------------|------------------------|
+|   ✅   |   ✅   |   ✅   |   ✅   |   ✅   |   ✅   |
 
 ---
 
 ## To-do list
+📝 make a html site/configurator with descriptions and maybe also with pictures to generate the "feature_set.txt" file
 
-✅ check compability with hudiy (https://hudiy.eu)
+📝 upload the gauges app for hudiy
 
-📝 test the hudiy implementation some days in the car
+✅ ~~realise hudiy support~~ -> implemented in script version v0.9.4
 
-📝 show navigation hints in the fis/dis
-
-❌ ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has already did that, it's quiet to complex for me to get this done
+❌ ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has already did that, it's quiet to complex for me to get this done. Maybe checkout [RNS-E-Pi-Control from korni92](https://github.com/korni92/RNS-E-Pi-Control). He is right on the way to get this done.
 
 ---
 
 ## Installation Guide
 
-1. Copy `read_from_canbus.py` to your Raspberry Pi, preferably in a new folder called `scripts`.
+1. Copy `read_from_canbus.py` and `feature_set.txt` to your Raspberry Pi, preferably in a new folder called `scripts`.
 
 2. If you are using the reverse camera feature, also copy the file `lines.png` to the same folder.
 
@@ -38,6 +45,8 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 5. The first start of the script should be done **with an active internet connection** so that all required Python modules and dependencies can be installed automatically.
 
+6. Set the features you want to use in the file "feature_set.txt"
+
 ---
 
 
@@ -49,7 +58,7 @@ The script can write to the first two lines of the **DIS/FIS** (Driver Informati
 
 ![Image](https://github.com/user-attachments/assets/f16e3018-3c32-4819-99f9-9a51ef2f099c) &nbsp;&nbsp;&nbsp; ![Image](https://github.com/user-attachments/assets/abfc84b0-341d-49f7-b662-1df58eaa0d3d)
 
-| **CAN Bus Data (Infotainment Bus)** | **OpenAuto Pro Media Info** |
+| **CAN Bus Data (Infotainment Bus)** | **Hudiy / OpenAuto Pro Media Info** |
 |-------------------------------------|-----------------------------|
 | - Speed<br>- RPM<br>- Coolant temperature (A4 8E only)<br>- Outside temperature<br>- CPU usage & temperature<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration <br> <br> <br> |
 
@@ -100,7 +109,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 ---
 
-### 4. Compabillity &nbsp;&nbsp;&nbsp; [![Report Compatibility](https://img.shields.io/badge/🚗%20Report%20Compatibility-orange)](https://github.com/noobychris/audi-can-rpi/issues/new?labels=compatibility&template=report_compatibility.yml)
+### 4. Car Compabillity &nbsp;&nbsp;&nbsp; [![Report Compatibility](https://img.shields.io/badge/🚗%20Report%20Compatibility-orange)](https://github.com/noobychris/audi-can-rpi/issues/new?labels=compatibility&template=report_compatibility.yml)
 
 | Model        | DIS/FIS Output | MFSW | Outside Temp | Note |
 |--------------|----------------|------|--------------|------|
