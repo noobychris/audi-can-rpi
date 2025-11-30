@@ -24,7 +24,7 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 📝 upload the gauges app for hudiy
 
-✅ ~~realise hudiy support~~ -> implemented in script version v0.9.4
+✅ ~~realise hudiy support~~ -> implemented in script version v0.9.5
 
 ❌ ~~output content to middle dis/fis section like fis control does (https://fis-control.de/index_de.html)~~ -> after talking to someone who has already did that, it's quiet to complex for me to get this done. Maybe checkout [RNS-E-Pi-Control from korni92](https://github.com/korni92/RNS-E-Pi-Control). He is right on the way to get this done.
 
