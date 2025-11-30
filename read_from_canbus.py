@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Project on GitHub: https://github.com/noobychris/audi-can-rpi
-script_version = "v0.9.4"
+script_version = "v0.9.5"
 
 # If you have any trouble with the script, you can enable LOGGING_OUTPUT to get more information's about exceptions.
 # The messages will be saved in the script/logs folder with date, name of the script.
