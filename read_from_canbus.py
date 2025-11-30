@@ -3942,17 +3942,15 @@ async def process_canid_461(msg):
             device.emit(uinput.KEY_1, 0)
         elif msg == '373001002001':
             if ENABLE_LOGGING:
-                logger.info("SHORT-Press of RNS-E Button detected: Wheel right | Keyboard: 2 | OpenAuto: Scroll right | HUDIY: ")
+                logger.info("SHORT-Press of RNS-E Button detected: Wheel right | Keyboard: 2 | OpenAuto: Scroll right | HUDIY: Scroll right")
             device.emit(uinput.KEY_2, 1)
             device.emit(uinput.KEY_2, 0)
         elif msg == '373001400000':  # RNS-E: up button pressed
             up += 1
-            if ENABLE_LOGGING:
-                logger.info(f"up: {up}")
         elif msg == '373004400000' and up > 0:  # RNS-E: up button released
             if up <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: UP | Keyboard: UP arrow | OpenAuto: Navigate up | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: UP | Keyboard: UP arrow | OpenAuto: Navigate up | HUDIY: Navigate up")
                 device.emit(uinput.KEY_UP, 1)
                 device.emit(uinput.KEY_UP, 0)
             elif 4 < up <= 16:
@@ -3983,17 +3981,15 @@ async def process_canid_461(msg):
             up = 0
         elif msg == '373001800000':  # RNS-E: down button pressed
             down += 1
-            if ENABLE_LOGGING:
-                logger.info(f"down: {down}")
         elif msg == '373004800000' and down > 0:  # RNS-E: down button released
             if down <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: DOWN | Keyboard: DOWN arrow | OpenAuto: Navigate Down | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: DOWN | Keyboard: DOWN arrow | OpenAuto: Navigate Down | HUDIY: Navigate Down")
                 device.emit(uinput.KEY_DOWN, 1)
                 device.emit(uinput.KEY_DOWN, 0)
             elif 4 < down <= 16:
                 if ENABLE_LOGGING:
-                    logger.info("LONG-Press of RNS-E Button detected: DOWN | Keyboard: O | OpenAuto: End phone call | HUDIY: ")
+                    logger.info("LONG-Press of RNS-E Button detected: DOWN | Keyboard: O | OpenAuto: End phone call | HUDIY: End phone call")
                 device.emit(uinput.KEY_O, 1)
                 device.emit(uinput.KEY_O, 0)
             elif down > 16:
@@ -4008,28 +4004,24 @@ async def process_canid_461(msg):
             down = 0
         elif msg == '373001001000':  # RNS-E: wheel pressed
             select += 1
-            if ENABLE_LOGGING:
-                logger.info(f"select: {select}")
         elif msg == '373004001000' and select > 0:  # RNS-E: wheel released
             if select <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: WHEEL press | Keyboard: ENTER | OpenAuto: Select | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: WHEEL press | Keyboard: ENTER | OpenAuto: Select | HUDIY: Select")
                 device.emit(uinput.KEY_ENTER, 1)
                 device.emit(uinput.KEY_ENTER, 0)
             elif select > 4:
                 if ENABLE_LOGGING:
-                    logger.info("LONG-Press of RNS-E Button detected: WHEEL press | Keyboard: B | OpenAuto: Toggle play/pause | HUDIY: ")
+                    logger.info("LONG-Press of RNS-E Button detected: WHEEL press | Keyboard: B | OpenAuto: Toggle play/pause | HUDIY: Toggle play/pause")
                 device.emit(uinput.KEY_B, 1)
                 device.emit(uinput.KEY_B, 0)
             select = 0
         elif msg == '373001000200':  # RNS-E: return button pressed
             back += 1
-            if ENABLE_LOGGING:
-                logger.info(f"back: {back}")
         elif msg == '373004000200' and back > 0:  # RNS-E: return button released
             if back <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: RETURN | Keyboard: ESC | OpenAuto: Back | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: RETURN | Keyboard: ESC | OpenAuto: Back | HUDIY: Back")
                 device.emit(uinput.KEY_ESC, 1)
                 device.emit(uinput.KEY_ESC, 0)
             elif 4 < back <= 50:
@@ -4045,7 +4037,7 @@ async def process_canid_461(msg):
                     device.emit(uinput.KEY_F12, 0)
             elif back > 50:
                 if ENABLE_LOGGING:
-                    logger.info("VERY LONG-Press of RNS-E Button detected: RETURN | HUDIY: Shutdown Raspberry Pi")
+                    logger.info("VERY LONG-Press of RNS-E Button detected: RETURN | OpenAuto: Shutdown Raspberry Pi | HUDIY: Shutdown Raspberry Pi")
                 command = 'sudo shutdown -h now'
                 result = await run_command("sudo shutdown -h now", log_output=False)
                 if result["stderr"]:
@@ -4053,33 +4045,29 @@ async def process_canid_461(msg):
             back = 0
         elif msg == '373001020000':  # RNS-E: next track button pressed
             nextbtn += 1
-            if ENABLE_LOGGING:
-                logger.info(f"nextbtn: {nextbtn}")
         elif msg == '373004020000' and nextbtn > 0:  # RNS-E: next track button released
             if nextbtn <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: >| (next) | Keyboard: N | OpenAuto: Next track | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: >| (next) | Keyboard: N | OpenAuto: Next track | HUDIY: Next track")
                 device.emit(uinput.KEY_N, 1)
                 device.emit(uinput.KEY_N, 0)
             elif nextbtn > 4:
                 if ENABLE_LOGGING:
-                    logger.info("LONG-Press of RNS-E Button detected: >| (next) | Keyboard: Right arrow | OpenAuto: ? | HUDIY: Right")
+                    logger.info("LONG-Press of RNS-E Button detected: >| (next) | Keyboard: Right arrow | OpenAuto: - | HUDIY: Right")
                 device.emit(uinput.KEY_RIGHT, 1)
                 device.emit(uinput.KEY_RIGHT, 0)
             nextbtn = 0
         elif msg == '373001010000':  # RNS-E: previous track button pressed
             prev += 1
-            if ENABLE_LOGGING:
-                logger.info(f"prev: {prev}")
         elif msg == '373004010000' and prev > 0:  # RNS-E: previous track button released
             if prev <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: |< (previous) | Keyboard: V | OpenAuto: Previous track | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: |< (previous) | Keyboard: V | OpenAuto: Previous track | HUDIY: Previous track")
                 device.emit(uinput.KEY_V, 1)
                 device.emit(uinput.KEY_V, 0)
             elif 4 < prev <= 16:
                 if ENABLE_LOGGING:
-                    logger.info("LONG-Press of RNS-E Button detected: |< (previous) | Keyboard: Left arrow | OpenAuto: ? | HUDIY: Left")
+                    logger.info("LONG-Press of RNS-E Button detected: |< (previous) | Keyboard: Left arrow | OpenAuto: - | HUDIY: Left")
                 device.emit(uinput.KEY_LEFT, 1)
                 device.emit(uinput.KEY_LEFT, 0)
             elif prev > 16:
@@ -4092,17 +4080,15 @@ async def process_canid_461(msg):
             prev = 0
         elif msg == '373001000100':  # RNS-E: setup button pressed
             setup += 1
-            if ENABLE_LOGGING:
-                logger.info(f"setup: {setup}")
         elif msg == '373004000100' and setup > 0:  # RNS-E: setup button released
             if setup <= 4:
                 if ENABLE_LOGGING:
-                    logger.info("SHORT-Press of RNS-E Button detected: SETUP | Keyboard: M | OpenAuto: Voice command | HUDIY: ")
+                    logger.info("SHORT-Press of RNS-E Button detected: SETUP | Keyboard: M | OpenAuto: Voice command | HUDIY: Voice command")
                 device.emit(uinput.KEY_M, 1)
                 device.emit(uinput.KEY_M, 0)
             elif 4 < setup <= 16:
                 if ENABLE_LOGGING:
-                    logger.info("LONG-Press of RNS-E Button detected: SETUP | Keyboard: F2 (OAP) / API (Hudiy) | OpenAuto: Toggle night mode AA/general | HUDIY: ")
+                    logger.info("LONG-Press of RNS-E Button detected: SETUP | Keyboard: F2 (OAP) / API (Hudiy) | OpenAuto: Toggle night mode AA/general | HUDIY: Toggle night mode AA/general")
                 if backend == "Hudiy":
                     event_handler.send_day_night("toggle")
                 elif backend == "OpenAuto":
@@ -4111,7 +4097,7 @@ async def process_canid_461(msg):
             elif setup > 16:
                 setup = 0
                 if ENABLE_LOGGING:
-                    logger.info("VERY LONG-Press of RNS-E Button detected: SETUP | HUDIY: Toggle candump")
+                    logger.info("VERY LONG-Press of RNS-E Button detected: SETUP |  OpenAuto: Toggle candump | HUDIY: Toggle candump")
                 await candump()
             setup = 0
 
