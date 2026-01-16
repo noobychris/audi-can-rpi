@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Project on GitHub: https://github.com/noobychris/audi-can-rpi
-script_version = "v0.9.5"
+script_version = "v0.9.6"
 
 # If you have any trouble with the script, you can enable LOGGING_OUTPUT to get more information's about exceptions.
 # The messages will be saved in the script/logs folder with date, name of the script.
@@ -1105,7 +1105,7 @@ async def start_script():
 
     loop = asyncio.get_event_loop()
     logger.info(f"Python interpreter: {python_version_str} ({python_path})")
-    logger.info("Script Version: %s (%s)", script_version, script_fullpath)
+    logger.info("Script version: %s (%s)", script_version, script_fullpath)
     logger.info(f"LOGGING_ENABLED: {ENABLE_LOGGING}")
     logger.info(f"Detected backend: {backend}")
 
@@ -3649,11 +3649,10 @@ class Cam:
 
 @handle_errors
 async def read_on_canbus(message):
+    canid = message.arbitration_id
+    msg = binascii.hexlify(message.data).decode('ascii').upper()
+    canid_print = str(hex(message.arbitration_id).lstrip('0x').upper())
     if script_started:
-        canid = message.arbitration_id
-        msg = binascii.hexlify(message.data).decode('ascii').upper()
-        if ENABLE_LOGGING:
-            canid_print = str(hex(message.arbitration_id).lstrip('0x').upper())
         if show_can_messages_in_logs:
             logger.info(f"CAN-Message with CAN-ID: {canid_print} Message: {msg} received")
         callbacks = {
@@ -4218,6 +4217,11 @@ async def process_canid_65F(msg):
     if msg[0:2] == '01' and car_model_set is None:
         carmodel = bytes.fromhex(msg[8:12]).decode()
         carmodelyear = await translate_caryear(bytes.fromhex(msg[14:16]).decode())
+
+        # handle US version model number "FM" of the Audi A3 8P as "8P" model
+        if carmodel == "FM":
+            carmodel = "8P"
+
         car_models = {
             '8E': ('Audi A4', '265', '267'),
             '8J': ('Audi TT', '667', '66B'),
@@ -4225,7 +4229,7 @@ async def process_canid_65F(msg):
             '8P': ('Audi A3', '667', '66B'),
             '42': ('Audi R8', '265', '267'),
         }
-        model_info = car_models.get(carmodel[0:2], ('Unbekanntes Modell', 'Unbekannt', 'Unbekannt'))
+        model_info = car_models.get(carmodel[0:2], ('unknown car model', 'unknown', 'unknown'))
         carmodelfull, FIS1, FIS2 = model_info
         logger.info("")
         logger.info('The car model and car model year were successfully read from the CAN-Bus.')
@@ -4242,7 +4246,7 @@ async def process_canid_661(msg):
         if tv_mode_active == 0:
             device.emit(uinput.KEY_X, 1)
             device.emit(uinput.KEY_X, 0)
-            logger.info('RNS-E is (back) in TV mode - play media - Keyboard: "X" - OpenAuto: "play"')
+            logger.info('RNS-E is (back) in TV mode - play media - Keyboard: "X" - Hudiy/OpenAuto: "play"')
             tv_mode_active = 1
             if only_send_if_radio_is_in_tv_mode:
                 send_on_canbus = True
@@ -4251,7 +4255,7 @@ async def process_canid_661(msg):
         if tv_mode_active == 1:
             device.emit(uinput.KEY_C, 1)
             device.emit(uinput.KEY_C, 0)
-            logger.info('RNS-E is not in TV mode (anymore) - pause media - Keyboard: "C" - OpenAuto: "pause"')
+            logger.info('RNS-E is not in TV mode (anymore) - pause media - Keyboard: "C" - Hudiy/OpenAuto: "pause"')
             tv_mode_active = 0
             if only_send_if_radio_is_in_tv_mode:
                 send_on_canbus = False
