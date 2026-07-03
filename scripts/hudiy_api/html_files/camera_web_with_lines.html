@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hudiy Reversecamera with Lines</title>
+<style>
+  html, body { margin:0; padding:0; background:black; height:100%; overflow:hidden; }
+
+  video#cam, img#overlay {
+    position:absolute;
+    top:0; left:0;
+    width:100vw; height:100vh;
+    object-fit:fill;
+  }
+
+  video#cam { z-index:0; }
+  img#overlay { pointer-events:none; z-index:1; }
+
+  #closeX {
+    position: fixed; top: 50px; left: 50%;
+    transform: translate(-50%, -200%);
+    width: 64px; height: 64px; border-radius: 50%;
+    border:none; background:#e53935; color:#fff;
+    font-size:32px; display:flex; justify-content:center; align-items:center;
+    cursor:pointer; opacity:0; visibility:hidden;
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.32s;
+    z-index:1000;
+  }
+  #closeX.visible { transform: translate(-50%,0); opacity:1; visibility:visible; }
+</style>
+</head>
+<body>
+
+<video id="cam" autoplay muted playsinline></video>
+<img id="overlay" src="lines.png" alt="Overlay">
+<button id="closeX">✕</button>
+
+
+<script>
+let currentStream = null;
+const closeX = document.getElementById("closeX");
+
+async function startCamera(){
+  if(currentStream) return;
+
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+
+    const rearCam = devices.find(d =>
+      d.kind === "videoinput" &&
+      (
+        d.label.toLowerCase().includes("rearcam") ||
+        d.label.toLowerCase().includes("video42")
+      )
+    );
+
+    const constraints = rearCam
+      ? { video: { deviceId: { exact: rearCam.deviceId } }, audio: false }
+      : { video: true, audio: false };
+
+    console.log("Using camera:", rearCam ? rearCam.label : "fallback video:true");
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    currentStream = stream;
+    document.getElementById("cam").srcObject = stream;
+  } catch(err) {
+    console.error("Camera error:", err);
+  }
+}
+
+function stopCamera(){
+  if(currentStream){
+    currentStream.getTracks().forEach(t=>t.stop());
+    currentStream=null;
+  }
+}
+
+async function hudiyClosePage(){
+  try{
+    await fetch("http://127.0.0.1:44408/revcam_hide", {
+      method:"GET",
+      cache:"no-store",
+      keepalive:true
+    });
+  }catch(e){
+    console.error("Hide failed:", e);
+  }finally{
+    stopCamera();
+  }
+}
+
+document.addEventListener("pointerdown", ()=> closeX.classList.add("visible"));
+closeX.addEventListener("click", hudiyClosePage);
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible") startCamera();
+  else stopCamera();
+});
+
+startCamera();
+</script>
+
+
+</body>
+</html>

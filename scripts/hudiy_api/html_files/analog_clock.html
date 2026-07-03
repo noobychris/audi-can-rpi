@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --color-hands-main: #ffffff;
+    --color-hand-sec: #ff4444;
+    --color-date: #dddddd;
+    --color-time: #dddddd;
+    --color-markers-hours: #ffffff;
+    --color-markers-minutes: #ffffff;
+    --color-center-dot-border: #000000;
+
+    /* Globaler horizontaler Squeeze für TV/NTSC/PAL-Feinkorrektur
+       1.00 = keine Quetschung, 0.90 = wie gauges.html */
+    --global-x-squeeze: 0.90;
+    --clock-x-squeeze: var(--global-x-squeeze);
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('api/js/Roboto-Regular.ttf') format('truetype');
+    font-display: swap;
+}
+
+body {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+    background:transparent;
+    overflow:hidden;
+    font-family:'Roboto',sans-serif;
+}
+
+.clock-face {
+    width:95vmin;
+    height:95vmin;
+    position:relative;
+    transform:scaleX(var(--clock-x-squeeze));
+    transform-origin:center center;
+}
+
+.date-display {
+    position:absolute;
+    top:20%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--color-date);
+    font-size:14vmin;
+    font-weight:bold;
+    letter-spacing:0.1vmin;
+    z-index:5;
+}
+
+.time-display {
+    position:absolute;
+    top:60%;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--color-time);
+    font-size:14vmin;
+    font-weight:bold;
+    letter-spacing:0.1vmin;
+    z-index:5;
+}
+
+.marker, .hand-container {
+    position:absolute;
+    left:50%;
+    bottom:50%;
+    transform-origin:bottom center;
+}
+
+.marker {
+    height:50%;
+    width:0;
+}
+
+.marker::after {
+    content:'';
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+.marker.hour-marker::after {
+    top:2%;
+    width:1.5vmin;
+    height:6vmin;
+    background:var(--color-markers-hours);
+}
+
+.marker.minute-dot::after {
+    top:2%;
+    width:1.1vmin;
+    height:1.1vmin;
+    border-radius:50%;
+    background:var(--color-markers-minutes);
+}
+
+.hand-container {
+    height:50%;
+    z-index:10;
+}
+
+.hand-body {
+    position:absolute;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--color-hands-main);
+    border-radius:50px 50px 0 0;
+}
+
+.hour-wrapper .hand-body { width:3vmin; height:55%; }
+.min-wrapper  .hand-body { width:3vmin; height:80%; }
+.sec-wrapper  .hand-body {
+    width:1.0vmin;
+    height:90%;
+    background:var(--color-hand-sec);
+}
+
+.center-dot {
+    width:3vmin;
+    height:3vmin;
+    background:var(--color-hands-main);
+    border-radius:50%;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    z-index:20;
+    border:0.6vmin solid var(--color-center-dot-border);
+}
+</style>
+</head>
+
+<body>
+
+<div class="clock-face">
+    <div id="date" class="date-display"></div>
+    <div id="time" class="time-display"></div>
+
+    <div id="markers"></div>
+
+    <div id="hour" class="hand-container hour-wrapper"><div class="hand-body"></div></div>
+    <div id="min"  class="hand-container min-wrapper"><div class="hand-body"></div></div>
+    <div id="sec"  class="hand-container sec-wrapper"><div class="hand-body"></div></div>
+
+    <div class="center-dot"></div>
+</div>
+
+<script>
+const CONFIG = {
+    // Fest auf Deutsch setzen. navigator.language kann in HUDIY/QtWebEngine z.B. en-US sein.
+    locale: 'de-DE'
+};
+
+window.hudiy = window.hudiy || {};
+hudiy.onColorSchemeChanged = updateColors;
+hudiy.onAttached = updateColors;
+
+// Marker erstellen
+const markers = document.getElementById('markers');
+for (let i = 0; i < 60; i++) {
+    const m = document.createElement('div');
+    m.className = `marker ${i % 5 === 0 ? 'hour-marker' : 'minute-dot'}`;
+    m.style.transform = `rotate(${i * 6}deg)`;
+    markers.appendChild(m);
+}
+
+// Elemente
+const hourEl = document.getElementById('hour');
+const minEl  = document.getElementById('min');
+const secEl  = document.getElementById('sec');
+const dateEl = document.getElementById('date');
+const timeEl = document.getElementById('time');
+
+let lastMinute = -1;
+let lastDate = '';
+
+function updateClock() {
+    const now = new Date();
+
+    const ms = now.getMilliseconds();
+    const s = now.getSeconds() + ms / 1000;
+    const m = now.getMinutes() + s / 60;
+    const h = now.getHours() + m / 60;
+
+    // Rotation
+    secEl.style.transform  = `rotate(${s * 6}deg)`;
+    minEl.style.transform  = `rotate(${m * 6}deg)`;
+    hourEl.style.transform = `rotate(${h * 30}deg)`;
+
+    // Zeit nur bei Minutenwechsel updaten
+    const currentMinute = now.getMinutes();
+    if (currentMinute !== lastMinute) {
+        lastMinute = currentMinute;
+
+        timeEl.textContent = now.toLocaleTimeString(CONFIG.locale, {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Datum nur bei Änderung
+    const currentDate = now.toDateString();
+    if (currentDate !== lastDate) {
+        lastDate = currentDate;
+
+        dateEl.textContent = now.toLocaleDateString(CONFIG.locale, {
+            day: 'numeric',
+            month: 'short'
+        });
+    }
+}
+
+// Smooth loop
+function tick() {
+    updateClock();
+    requestAnimationFrame(tick);
+}
+tick();
+
+// Hudiy Farben
+function updateColors() {
+    const cs = (window.hudiy && hudiy.colorScheme) || {};
+    document.documentElement.style.setProperty('--color-markers-minutes', cs.secondary || '#ffffff');
+    document.documentElement.style.setProperty('--color-markers-hours', cs.primary || '#ffffff');
+    document.documentElement.style.setProperty('--color-hands-main', cs.primary || '#ffffff');
+    document.documentElement.style.setProperty('--color-hand-sec', cs.outline || '#ff4444');
+    document.documentElement.style.setProperty('--color-date', cs.onSurface || '#dddddd');
+    document.documentElement.style.setProperty('--color-time', cs.onSurface || '#dddddd');
+    document.documentElement.style.setProperty('--color-center-dot-border', cs.surface || '#000000');
+}
+</script>
+
+</body>
+</html>

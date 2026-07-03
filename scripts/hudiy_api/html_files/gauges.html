@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>CAN-BUS Gauges</title>
+  <meta name="theme-color" content="#101826" />
+
+  <style>
+    :root {
+      --grid-gap-x: 0.8vmin;
+      --grid-gap-y: 0px;
+      --grid-pad: 0px;
+      --card-shadow: none;
+      --m-h: 5vw;
+
+      /* Globaler horizontaler Squeeze für TV/NTSC/PAL-Feinkorrektur */
+      --global-x-squeeze: 0.90;
+      --control-x-squeeze: var(--global-x-squeeze);
+
+      /* will be set via JS from hudiy.colorScheme */
+      --bg: transparent;
+      --fg: #000;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg, transparent);
+      color: var(--fg, #000);
+      font-family: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 400;
+    }
+    body { overflow: hidden; }
+
+    #closeX {
+      position: fixed; top: 50px; left: 50%; transform: translate(-50%, -200%) scaleX(var(--control-x-squeeze));
+      transform-origin: center center;
+      width: 64px; height: 64px; border-radius: 50%; border:none; background:#e53935;
+      color:#fff; font-size:32px; display:flex; justify-content:center; align-items:center;
+      cursor:pointer; opacity:0; visibility:hidden;
+      transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.32s, visibility 0s linear 0.32s;
+      outline:none; z-index:1000;
+    }
+    #closeX.visible {
+      transform: translate(-50%, 0) scaleX(var(--control-x-squeeze)); opacity:1; visibility:visible;
+      transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.32s, visibility 0s linear 0s;
+    }
+    #closeX.focused { box-shadow:0 0 10px #fff; outline:2px solid #fff; }
+
+    #closeX svg {
+      width: 30px;
+      height: 30px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+    #debug {
+      position: fixed; bottom:0; left:0; width:100%; max-height:200px;
+      background:rgba(0,0,0,0.7); color:#0f0; font-family: monospace; font-size:0.9rem;
+      padding:0.5rem; overflow-y:auto; display:none; z-index:2000;
+    }
+
+    #focusIndicator {
+      position: fixed; top:10px; right:10px; width:16px; height:16px;
+      border-radius:50%; background:red; display:none; z-index:2001;
+    }
+
+    .wrap {
+      height: 100vh;
+      width: 100vw;
+      padding: 0 var(--m-h);
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pages-viewport {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      touch-action: pan-y;
+    }
+
+    .pages-track {
+      height: 100%;
+      display: flex;
+      will-change: transform;
+      transition: transform 280ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .page {
+      flex: 0 0 100%;
+      height: 100%;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grid {
+      height: 100%;
+      display: grid;
+      box-sizing: border-box;
+      column-gap: var(--grid-gap-x);
+      row-gap: var(--grid-gap-y);
+      align-content: space-evenly;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .card {
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: var(--card-shadow);
+      background: transparent;
+      position: relative;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .card.key-selected::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 2.4vmin;
+      border: 2px solid var(--fg, #fff);
+      box-shadow: 0 0 4px rgba(255,255,255,0.85), inset 0 0 2px rgba(255,255,255,0.28);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .card.fullscreen {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .card.empty-slot {
+      cursor: default;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    canvas { display:block; background:transparent }
+
+    body.debug .card { outline: 2px dashed rgba(0,0,0,0.35); }
+    body.debug canvas { outline: 2px dashed rgba(0,128,255,0.35); }
+
+    .page-arrow {
+      position: fixed;
+      top: 50%;
+      width: 60px;
+      height: 60px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: var(--arrow-bg, rgba(120, 128, 140, 0.22));
+      color: var(--fg, #fff);
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      outline: none;
+      pointer-events: none;
+      z-index: 950;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transform-origin: center center;
+      transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.32s, visibility 0s linear 0.32s, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .page-arrow.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.32s, visibility 0s linear 0s, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .page-arrow:hover,
+    .page-arrow.focused,
+    .page-arrow:focus-visible {
+      background: var(--arrow-bg-active, rgba(160, 170, 185, 0.30));
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.24);
+    }
+
+    .page-arrow.left {
+      left: 16px;
+      transform: translate(-140%, -50%) scaleX(var(--control-x-squeeze));
+    }
+
+    .page-arrow.right {
+      right: 16px;
+      transform: translate(140%, -50%) scaleX(var(--control-x-squeeze));
+    }
+
+    .page-arrow.left.visible {
+      transform: translate(0, -50%) scaleX(var(--control-x-squeeze));
+    }
+
+    .page-arrow.right.visible {
+      transform: translate(0, -50%) scaleX(var(--control-x-squeeze));
+    }
+
+    .page-arrow svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+
+    .fullscreen-viewport {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      display: none;
+      z-index: 300;
+      touch-action: pan-y;
+      background: var(--bg, transparent);
+    }
+
+    .fullscreen-viewport.active {
+      display: block;
+    }
+
+    body.fullscreen-mode #pagesViewport,
+    body.fullscreen-mode #pageIndicator {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .fullscreen-track {
+      height: 100%;
+      display: flex;
+      will-change: transform;
+      transition: transform 280ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .fullscreen-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
+
+    .fullscreen-card {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: transparent;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .fullscreen-card canvas {
+      display: block;
+      background: transparent;
+    }
+
+    .page-indicator {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 940;
+      display: flex;
+      gap: 8px;
+      opacity: 0.9;
+    }
+
+    .page-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .page-dot.active {
+      background: rgba(255,255,255,0.95);
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <button id="closeX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+  <button id="pageArrowLeft" class="page-arrow left" aria-label="Vorherige Seite" title="Vorherige Seite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+  <button id="pageArrowRight" class="page-arrow right" aria-label="Nächste Seite" title="Nächste Seite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6 15.5 12l-6 6"/></svg></button>
+  <div id="debug"></div>
+  <div id="focusIndicator"></div>
+
+  <div class="wrap" id="wrap">
+    <div class="pages-viewport" id="pagesViewport">
+      <div class="pages-track" id="pagesTrack"></div>
+    </div>
+    <div class="fullscreen-viewport" id="fullscreenViewport" aria-hidden="true">
+      <div class="fullscreen-track" id="fullscreenTrack"></div>
+    </div>
+  </div>
+
+  <div class="page-indicator" id="pageIndicator"></div>
+
+  <script>
+    const DEBUG = false;
+    const KEY_NAV_DEBUG = false; // bei Bedarf auf true setzen: zeigt Tastatur-/HUDIY-Navigation im Debug-Overlay
+    const CANVAS_X_SQUEEZE = 0.90;
+    const FULLSCREEN_TOP_PADDING_PX = 24;
+    const FULLSCREEN_BOTTOM_PADDING_PX = 24;
+
+    const debugEl = document.getElementById("debug");
+    const focusIndicator = document.getElementById("focusIndicator");
+    const closeX = document.getElementById("closeX");
+    const pageArrowLeft = document.getElementById("pageArrowLeft");
+    const pageArrowRight = document.getElementById("pageArrowRight");
+    const pageIndicator = document.getElementById("pageIndicator");
+    const pagesViewport = document.getElementById("pagesViewport");
+    const pagesTrack = document.getElementById("pagesTrack");
+    const fullscreenViewport = document.getElementById("fullscreenViewport");
+    const fullscreenTrack = document.getElementById("fullscreenTrack");
+
+    if(DEBUG || KEY_NAV_DEBUG){ debugEl.style.display="block"; focusIndicator.style.display="block"; }
+
+    function log(msg){
+      if(!DEBUG && !KEY_NAV_DEBUG) return;
+      const time = new Date().toLocaleTimeString();
+      debugEl.textContent += `[${time}] ${msg}\n`;
+      debugEl.scrollTop = debugEl.scrollHeight;
+    }
+
+    let hideTimer = null;
+    const AUTO_HIDE_MS = 3500;
+    const KEY_SELECTION_AUTO_HIDE_MS = 5000;
+    let userHasInteracted = false;
+    let SELECTED_SLOT = null;
+    let SELECTED_TILE_FRAME_VISIBLE = false;
+    let selectedTileHideTimer = null;
+
+    function showX(force = false, focusClose = false){
+      if (force) userHasInteracted = true;
+      if (!userHasInteracted) return;
+      closeX.classList.add("visible");
+      if (focusClose) {
+        closeX.focus({ preventScroll: true });
+        closeX.classList.add("focused");
+      }
+      if(hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(hideX, AUTO_HIDE_MS);
+      updatePageArrowVisibility();
+      requestAnimationFrame(updatePageArrowVisibility);
+    }
+
+    function hideX(){
+      closeX.classList.remove("visible");
+      closeX.classList.remove("focused");
+      hideTimer = null;
+      updatePageArrowVisibility();
+    }
+
+    function hudiyClosePage() {
+      fetch("http://127.0.0.1:44408/hudiy_home")
+        .then(res => res.text().then(txt => log("ESC simulated via uinput: " + txt)))
+        .catch(err => log("ESC failed: " + err));
+    }
+
+    function updateFocusIndicator(){
+      if(!DEBUG) return;
+      focusIndicator.style.background = (hudiy && hudiy.inputFocus) ? "lime":"red";
+    }
+
+    let reconnectInterval = null;
+    function startReconnectLoop(){
+      if(reconnectInterval) return;
+      let attempt=1;
+      const maxAttempts = 5;
+      reconnectInterval = setInterval(()=>{
+        if(document.visibilityState!=="visible"){
+          return;
+        }
+        if(hudiy && !hudiy.inputFocus){
+          fetch("http://127.0.0.1:44408/toggle_hudiy_focus")
+            .then(res => res.text().then(txt => log("Toggle focus response: "+txt)))
+            .catch(err => log("Toggle focus failed: "+err));
+          attempt++;
+          if(attempt>maxAttempts){
+            clearInterval(reconnectInterval);
+            reconnectInterval=null;
+          }
+        } else {
+          clearInterval(reconnectInterval);
+          reconnectInterval=null;
+        }
+      },500);
+    }
+
+    window.hudiy = window.hudiy||{};
+
+    hudiy.onAttached = function(){
+      setTimeout(()=>{
+        if(document.visibilityState==="visible"){
+          startReconnectLoop();
+        }
+      },5000);
+    };
+
+    hudiy.onInputFocusChanged = function(){
+      updateFocusIndicator();
+      if(!hudiy.inputFocus && document.visibilityState==="visible"){
+        startReconnectLoop();
+      }
+    };
+
+    hudiy.onMoveToPreviousControl = function(){ return handleDashboardKeyNavigation(-1, "hudiy-prev-control"); };
+    hudiy.onMoveToNextControl = function(){ return handleDashboardKeyNavigation(1, "hudiy-next-control"); };
+
+    hudiy.onGoLeft = function(){ return handleDashboardKeyNavigation(-1, "hudiy-go-left"); };
+    hudiy.onGoRight = function(){ return handleDashboardKeyNavigation(1, "hudiy-go-right"); };
+
+    hudiy.onTriggered = function(){
+      return handleDashboardTrigger("hudiy-trigger");
+    };
+
+    hudiy.onGoBack = function(){
+      if (FULLSCREEN_CARD) {
+        exitGaugeFullscreen();
+        return true;
+      }
+      if (closeX.classList.contains("visible")) {
+        hideX();
+        return true;
+      }
+      return false;
+    };
+
+    hudiy.onActivatedChanged = function(){
+      updateFocusIndicator();
+      logKeyNavState("activatedChanged");
+    };
+
+    document.addEventListener("pointerdown", ()=>{ userHasInteracted = true; showX(); });
+    closeX.addEventListener("click", hudiyClosePage);
+    closeX.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter"||e.key===" "){ e.preventDefault(); hudiyClosePage(); }
+    });
+
+    document.addEventListener("visibilitychange", ()=>{
+      if(document.visibilityState==="visible" && (!hudiy.inputFocus)){
+        startReconnectLoop();
+      }
+    });
+
+    const WS_URL = "ws://127.0.0.1:8765";
+    const needle_sweep = true;
+    const SWEEP_DURATION = 1300;   // Dauer pro Fahrt Min -> Max in ms
+    const SWEEP_HOLD = 300;        // Pause am Maximum in ms
+    const SWEEP_RETURN_FACTOR = 0.9; // Rückfahrt Max -> Idle relativ zur SWEEP_DURATION
+    const SWEEP_START_DELAY = 300; // kleine Verzögerung nach Seitenwechsel
+    const SWEEP_IDLE_VALUE = 0;    // Wert nach dem Sweep, bevor Live-Daten wieder übernommen werden
+    const SWEEP_IDLE_HOLD = 140;   // kurze Pause auf dem Idle-Wert in ms
+    const GRADIENT = { enabled: false, applyOnAlert: false, start: "#4b9dfa", end: "#22c55e" };
+    const AA = { enabled: true, scale: 1.5 };
+    const PIXEL_SNAP = { enabled: true };
+
+    const ENABLE_TRANSLATION = true;
+    const TRANSLATION_LANG   = "de";
+    const TRANSLATIONS = {
+      en: {
+        speed:         "km/h",
+        rpm:           "RPM",
+        coolant:       "Coolant",
+        outside_temp:  "Outside",
+        cpu_load:      "CPU [%]",
+        cpu_freq_mhz:  "CPU [MHz]",
+        cpu_temp:      "CPU temp",
+        speed_measure: "0-100",
+        in_word:       "in",
+      },
+      de: {
+        speed:         "km/h",
+        rpm:           "RPM",
+        coolant:       "Kühlmittel",
+        outside_temp:  "Außen",
+        cpu_load:      "CPU [%]",
+        cpu_freq_mhz:  "CPU [MHz]",
+        cpu_temp:      "CPU",
+        speed_measure: "0-100",
+        in_word:       "in",
+      }
+    };
+
+    const ALERT_COLOR_MAP = { yellow:"#FFD84D", orange:"#FF9A1A", red:"#FF3B30" };
+
+    const ALERTS = {
+      speed:           {use_alerts:false, applyTo:{value:true,  label:true}, thresholds:[]},
+      rpm:             {use_alerts:true,  applyTo:{value:true,  label:true}, thresholds:[{gte:6300,color:"orange"}, {gte:7000,color:"red"}]},
+      coolant:         {use_alerts:true,  applyTo:{value:true,  label:true}, thresholds:[{gte:105,color:"yellow"}, {gte:110,color:"orange"}, {gte:120,color:"red"}]},
+      outside_temp:    {use_alerts:false, applyTo:{value:false, label:false}, thresholds:[]},
+      cpu_load:        {use_alerts:true,  applyTo:{value:false, label:false}, thresholds:[{gte:90,color:"orange"}, {gte:100,color:"red"}]},
+      cpu_freq_mhz:    {use_alerts:false, applyTo:{value:false, label:false}, thresholds:[]},
+      cpu_temp:        {use_alerts:true,  applyTo:{value:true,  label:true}, thresholds:[{gte:80,color:"yellow"},  {gte:90,color:"orange"},  {gte:100,color:"red"}]},
+      speed_measure:   {use_alerts:false, applyTo:{value:true,  label:true}, thresholds:[]},
+
+    };
+
+    const VALUE_FORMAT = {
+      speed:{decimals:0}, rpm:{decimals:0}, coolant:{decimals:0}, outside_temp:{decimals:0},
+      cpu_load:{decimals:0}, cpu_freq_mhz:{decimals:0}, cpu_temp:{decimals:0}, speed_measure:{decimals:2},
+    };
+
+    const ANIM_CFG = {
+      enabled: true,
+      minMs: 120,
+      baseMs: 150,
+      extraMs: 450,
+      ease: t => 1 - Math.pow(1 - t, 3),
+    };
+
+    const STYLE_RATIOS = {
+      arcTrackW:  14/210,
+      arcValueW:  14/210,
+      valueFont:  38/210,
+      valueYOffset: -16/210,
+      labelFont:  24/210,
+      labelYOffset: 30/210,
+      minmaxFont: 20/210,
+      radiusFactor: 0.43,
+      minmaxRadius: 0.88,
+      minmaxAngleInsetDeg: 6
+    };
+
+    function tLabel(key, fallback="") {
+      if (!ENABLE_TRANSLATION) return fallback;
+      const table = TRANSLATIONS[TRANSLATION_LANG] || {};
+      return table[key] || fallback;
+    }
+
+    const GAUGES = [
+      { key:"speed",         labelBase:tLabel("speed",""),                  min:0,   max:260  },
+      { key:"rpm",           labelBase:tLabel("rpm","RPM"),                 min:0,   max:8000 },
+      { key:"coolant",       labelBase:tLabel("coolant","Coolant"),         min:50,  max:130  },
+      { key:"outside_temp",  labelBase:tLabel("outside_temp","Outside"),    min:-30, max:50   },
+      { key:"cpu_load",      labelBase:tLabel("cpu_load","CPU [%]"),        min:0,   max:100  },
+      { key:"cpu_freq_mhz",  labelBase:tLabel("cpu_freq_mhz","CPU [MHz]"),  min:600, max:1800 },
+      { key:"cpu_temp",      labelBase:tLabel("cpu_temp","CPU"),            min:0,   max:110  },
+      { key:"speed_measure", labelBase:tLabel("speed_measure","0-100"),     min:0,   max:30   },    ];
+
+    /*
+      Layout-/Slot-Konfiguration:
+      - rows / cols definieren die Grid-Größe pro Seite
+      - slots werden fortlaufend nummeriert: 1..N
+      - Anzahl Seiten wird automatisch aus rows*cols und höchstem Slot berechnet
+      - leere Slots einfach weglassen oder auf "" setzen
+
+      Beispiel bei rows:2, cols:4
+      Seite 1 = Slots 1..8
+      Seite 2 = Slots 9..16
+    */
+    const LAYOUT_CONFIG = {
+      rows: 2,
+      cols: 4,
+      slots: {
+        1: "speed",
+        2: "rpm",
+        3: "coolant",
+        4: "outside_temp",
+        5: "cpu_load",
+        6: "cpu_freq_mhz",
+        7: "cpu_temp",
+        8: "speed_measure",
+      }
+    };
+
+    const BASE_LIMITS = Object.fromEntries(GAUGES.map(g => [g.key, { min: g.min, max: g.max }]));
+    const IDX  = Object.fromEntries(GAUGES.map((g,i)=>[g.key,i]));
+    const GAUGE_BY_KEY = Object.fromEntries(GAUGES.map(g => [g.key, g]));
+
+    const PAGE_STATE = {
+      current: 0,
+      count: 0
+    };
+
+    let FULLSCREEN_GAUGE_KEY = null;
+    let FULLSCREEN_CARD = null;
+    let FULLSCREEN_PAGE_INDEX = null;
+    let FULLSCREEN_SLOT = null;
+    let FULLSCREEN_KEEP_TRACK_ANIMATION = false;
+    let CUR_STYLE = null;
+    let CURRENT_TILE_PX = 160;
+
+    const CARDS_BY_GAUGE_KEY = Object.create(null);
+    const CANVASES_BY_GAUGE_KEY = Object.create(null);
+    const FULLSCREEN_CARDS = [];
+
+    function sanitizeGaugeKey(key){
+      if (typeof key !== "string") return "";
+      key = key.trim();
+      return IDX[key] !== undefined ? key : "";
+    }
+
+    function getSlotsPerPage() {
+      return Math.max(1, Number(LAYOUT_CONFIG.rows) * Number(LAYOUT_CONFIG.cols));
+    }
+
+    function getHighestConfiguredSlot() {
+      const slotNumbers = Object.keys(LAYOUT_CONFIG.slots || {})
+        .map(k => Number(k))
+        .filter(n => Number.isInteger(n) && n > 0);
+      return slotNumbers.length ? Math.max(...slotNumbers) : getSlotsPerPage();
+    }
+
+    function getPageCount() {
+      return Math.max(1, Math.ceil(getHighestConfiguredSlot() / getSlotsPerPage()));
+    }
+
+    function getGaugeKeyForGlobalSlot(slotNumber) {
+      return sanitizeGaugeKey(LAYOUT_CONFIG.slots?.[slotNumber] ?? "");
+    }
+
+    function buildFullscreenTrack() {
+      fullscreenTrack.innerHTML = "";
+      FULLSCREEN_CARDS.length = 0;
+
+      const slots = getConfiguredGaugeSlots();
+      slots.forEach((item, index) => {
+        const slide = document.createElement("div");
+        slide.className = "fullscreen-slide";
+        slide.dataset.fullscreenIndex = String(index);
+        slide.dataset.pageIndex = String(item.pageIndex);
+        slide.dataset.slot = String(item.slot);
+        slide.dataset.key = item.key;
+
+        const card = document.createElement("div");
+        card.className = "fullscreen-card";
+        card.dataset.fullscreenIndex = String(index);
+        card.dataset.pageIndex = String(item.pageIndex);
+        card.dataset.slot = String(item.slot);
+        card.dataset.key = item.key;
+
+        const canvas = document.createElement("canvas");
+        canvas.id = `fg-${item.slot}-${item.key}`;
+        canvas.dataset.key = item.key;
+        canvas.dataset.pageIndex = String(item.pageIndex);
+        canvas.dataset.slot = String(item.slot);
+        canvas.dataset.fullscreen = "true";
+
+        card.appendChild(canvas);
+        slide.appendChild(card);
+        fullscreenTrack.appendChild(slide);
+
+        FULLSCREEN_CARDS.push(card);
+        CANVASES_BY_GAUGE_KEY[item.key].push(canvas);
+      });
+    }
+
+    function updateFullscreenTrackTransform(animate = true) {
+      const idx = Math.max(0, getFullscreenSlotNavIndex());
+      fullscreenTrack.style.transition = animate ? "transform 280ms cubic-bezier(.2,.8,.2,1)" : "none";
+      fullscreenTrack.style.transform = `translateX(-${idx * 100}%)`;
+      if (!animate) {
+        requestAnimationFrame(() => { fullscreenTrack.style.transition = "transform 280ms cubic-bezier(.2,.8,.2,1)"; });
+      }
+    }
+
+    function buildPages() {
+      pagesTrack.innerHTML = "";
+      pageIndicator.innerHTML = "";
+
+      GAUGES.forEach(g => {
+        CARDS_BY_GAUGE_KEY[g.key] = [];
+        CANVASES_BY_GAUGE_KEY[g.key] = [];
+      });
+
+      PAGE_STATE.count = getPageCount();
+      const slotsPerPage = getSlotsPerPage();
+
+      for (let pageIndex = 0; pageIndex < PAGE_STATE.count; pageIndex++) {
+        const pageEl = document.createElement("div");
+        pageEl.className = "page";
+        pageEl.dataset.pageIndex = String(pageIndex);
+
+        const gridEl = document.createElement("div");
+        gridEl.className = "grid";
+        gridEl.id = `grid-${pageIndex}`;
+        pageEl.appendChild(gridEl);
+
+        for (let localSlot = 1; localSlot <= slotsPerPage; localSlot++) {
+          const globalSlot = pageIndex * slotsPerPage + localSlot;
+          const gaugeKey = getGaugeKeyForGlobalSlot(globalSlot);
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.pageIndex = String(pageIndex);
+          card.dataset.slot = String(globalSlot);
+
+          if (gaugeKey) {
+            card.dataset.key = gaugeKey;
+            card.setAttribute("role", "button");
+            card.setAttribute("tabindex", "0");
+            card.setAttribute("aria-label", `${GAUGE_BY_KEY[gaugeKey].labelBase || gaugeKey} fullscreen toggle`);
+
+            const canvas = document.createElement("canvas");
+            canvas.id = `g-${pageIndex}-${globalSlot}-${gaugeKey}`;
+            canvas.dataset.key = gaugeKey;
+            canvas.dataset.pageIndex = String(pageIndex);
+            canvas.dataset.slot = String(globalSlot);
+            card.appendChild(canvas);
+
+            CARDS_BY_GAUGE_KEY[gaugeKey].push(card);
+            CANVASES_BY_GAUGE_KEY[gaugeKey].push(canvas);
+          } else {
+            card.classList.add("empty-slot");
+            card.dataset.key = "";
+            card.setAttribute("aria-hidden", "true");
+          }
+
+          gridEl.appendChild(card);
+        }
+
+        pagesTrack.appendChild(pageEl);
+
+        const dot = document.createElement("div");
+        dot.className = "page-dot";
+        dot.dataset.pageIndex = String(pageIndex);
+        dot.addEventListener("click", () => {
+          if (FULLSCREEN_CARD) return;
+          goToPage(pageIndex);
+        });
+        pageIndicator.appendChild(dot);
+      }
+
+      pagesTrack.addEventListener("click", (e) => {
+        const card = e.target.closest(".card[data-key]");
+        if (!card || !card.dataset.key) return;
+        e.preventDefault();
+        e.stopPropagation();
+        toggleGaugeFullscreen(card);
+      });
+
+      pagesTrack.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest(".card[data-key]");
+        if (!card || !card.dataset.key) return;
+        e.preventDefault();
+        e.stopPropagation();
+        toggleGaugeFullscreen(card);
+      });
+
+      buildFullscreenTrack();
+      document.querySelectorAll("canvas").forEach(c => ro.observe(c));
+      updatePageIndicator();
+      updatePageTransform(false);
+      updatePageArrowVisibility();
+      updateSelectedTileVisual();
+    }
+
+    function updatePageTransform(animate = true) {
+      pagesTrack.style.transition = animate ? "transform 280ms cubic-bezier(.2,.8,.2,1)" : "none";
+      pagesTrack.style.transform = `translateX(-${PAGE_STATE.current * 100}%)`;
+      updatePageIndicator();
+      updatePageArrowVisibility();
+      if (!animate) {
+        requestAnimationFrame(() => { pagesTrack.style.transition = "transform 280ms cubic-bezier(.2,.8,.2,1)"; });
+      }
+    }
+
+    function updatePageIndicator() {
+      const dots = pageIndicator.querySelectorAll(".page-dot");
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle("active", idx === PAGE_STATE.current);
+      });
+      pageIndicator.style.display = PAGE_STATE.count > 1 && !FULLSCREEN_CARD ? "flex" : "none";
+    }
+
+    function getConfiguredGaugeSlots() {
+      const highestSlot = getHighestConfiguredSlot();
+      const slots = [];
+      for (let slot = 1; slot <= highestSlot; slot++) {
+        const key = getGaugeKeyForGlobalSlot(slot);
+        if (!key) continue;
+        const pageIndex = Math.floor((slot - 1) / getSlotsPerPage());
+        slots.push({ slot, key, pageIndex });
+      }
+      return slots;
+    }
+
+    function getFullscreenSlotNavIndex() {
+      if (FULLSCREEN_SLOT == null) return -1;
+      return getConfiguredGaugeSlots().findIndex(item => item.slot === FULLSCREEN_SLOT);
+    }
+
+    function canGoFullscreenPrev() {
+      const idx = getFullscreenSlotNavIndex();
+      return idx > 0;
+    }
+
+    function canGoFullscreenNext() {
+      const idx = getFullscreenSlotNavIndex();
+      const slots = getConfiguredGaugeSlots();
+      return idx >= 0 && idx < slots.length - 1;
+    }
+
+    function updatePageArrowVisibility() {
+      const controlsVisible = closeX.classList.contains("visible");
+      if (!controlsVisible) {
+        pageArrowLeft.classList.remove("visible");
+        pageArrowRight.classList.remove("visible");
+        return;
+      }
+
+      if (FULLSCREEN_CARD) {
+        const hasFullscreenSlots = getConfiguredGaugeSlots().length > 0;
+        pageArrowLeft.classList.toggle("visible", hasFullscreenSlots);
+        pageArrowRight.classList.toggle("visible", hasFullscreenSlots);
+        return;
+      }
+
+      const showPaging = PAGE_STATE.count > 1;
+      pageArrowLeft.classList.toggle("visible", showPaging && PAGE_STATE.current > 0);
+      pageArrowRight.classList.toggle("visible", showPaging && PAGE_STATE.current < PAGE_STATE.count - 1);
+    }
+
+    function getVisiblePageGaugeKeys(pageIndex = PAGE_STATE.current) {
+      const pageEl = pagesTrack.querySelector(`.page[data-page-index="${pageIndex}"]`);
+      if (!pageEl) return [];
+      const keys = new Set();
+      pageEl.querySelectorAll(".card[data-key]").forEach(card => {
+        const key = sanitizeGaugeKey(card.dataset.key);
+        if (key) keys.add(key);
+      });
+      return [...keys];
+    }
+
+    function cancelAnimationsForKeys(keys) {
+      keys.forEach(key => {
+        delete ANIM[key];
+      });
+      if (Object.keys(ANIM).length === 0) {
+        ANIM_RAF = null;
+      }
+    }
+
+    const SWEEP_LOCK = {
+      token: 0,
+      keys: new Set(),
+      pageIndex: null,
+    };
+
+    function isSweepLocked(key) {
+      return SWEEP_LOCK.keys.has(key);
+    }
+
+    function getSweepIdleValueForKey(key) {
+      const configuredIdle = Number.isFinite(Number(SWEEP_IDLE_VALUE)) ? Number(SWEEP_IDLE_VALUE) : 0;
+      return configuredIdle;
+    }
+
+    function unlockSweepAndSync(keys, token) {
+      if (token !== SWEEP_LOCK.token) return;
+      keys.forEach(key => SWEEP_LOCK.keys.delete(key));
+      if (SWEEP_LOCK.keys.size === 0) {
+        SWEEP_LOCK.pageIndex = null;
+      }
+      keys.forEach(key => {
+        if (Number.isFinite(STATE[key])) {
+          scheduleValueAnimation(key, STATE[key]);
+        } else {
+          renderKey(key);
+        }
+      });
+    }
+
+    function runNeedleSweepForPage(pageIndex = PAGE_STATE.current) {
+      if (!needle_sweep || FULLSCREEN_CARD) return;
+      const keys = getVisiblePageGaugeKeys(pageIndex);
+      if (!keys.length) return;
+
+      const token = ++SWEEP_LOCK.token;
+      SWEEP_LOCK.pageIndex = pageIndex;
+      SWEEP_LOCK.keys = new Set(keys);
+
+      const snapshots = keys.map(key => ({
+        key,
+        min: GAUGE_BY_KEY[key].min,
+        max: GAUGE_BY_KEY[key].max,
+        idle: getSweepIdleValueForKey(key),
+      }));
+
+      cancelAnimationsForKeys(keys);
+
+      snapshots.forEach(item => {
+        DISPLAY[item.key] = item.min;
+        renderKey(item.key);
+      });
+
+      const riseMs = Math.max(50, Number(SWEEP_DURATION) || 0);
+      const holdMs = Math.max(0, Number(SWEEP_HOLD) || 0);
+      const returnFactor = Math.max(0.1, Number(SWEEP_RETURN_FACTOR) || 0.9);
+      const fallMs = Math.max(50, Math.round(riseMs * returnFactor));
+      const idleHoldMs = Math.max(0, Number(SWEEP_IDLE_HOLD) || 0);
+      const startDelayMs = Math.max(0, Number(SWEEP_START_DELAY) || 0);
+
+      setTimeout(() => {
+        if (token !== SWEEP_LOCK.token) return;
+        snapshots.forEach(item => {
+          ANIM[item.key] = { from: item.min, to: item.max, start: performance.now(), dur: riseMs };
+        });
+        ensureAnimLoop();
+
+        setTimeout(() => {
+          if (token !== SWEEP_LOCK.token) return;
+          snapshots.forEach(item => {
+            ANIM[item.key] = { from: item.max, to: item.min, start: performance.now(), dur: fallMs };
+          });
+          ensureAnimLoop();
+
+          setTimeout(() => {
+            if (token !== SWEEP_LOCK.token) return;
+            snapshots.forEach(item => {
+              DISPLAY[item.key] = item.idle;
+              renderKey(item.key);
+            });
+
+            setTimeout(() => {
+              unlockSweepAndSync(keys, token);
+            }, idleHoldMs);
+          }, fallMs);
+        }, riseMs + holdMs);
+      }, startDelayMs);
+    }
+
+    let visibleSweepTimer = null;
+    let refreshProcessingLocked = false;
+    let refreshUnlockTimer = null;
+    const PENDING_WS_STATE = {
+      meta: Object.create(null),
+      values: Object.create(null),
+      byKey: Object.create(null),
+      generic: null,
+      has: false,
+    };
+
+    function clearPendingWsState() {
+      PENDING_WS_STATE.meta = Object.create(null);
+      PENDING_WS_STATE.values = Object.create(null);
+      PENDING_WS_STATE.byKey = Object.create(null);
+      PENDING_WS_STATE.generic = null;
+      PENDING_WS_STATE.has = false;
+    }
+
+    function clonePlainObject(obj) {
+      if (!obj || typeof obj !== "object" || Array.isArray(obj)) return {};
+      return { ...obj };
+    }
+
+    function mergePendingMeta(key, metaObj) {
+      if (!(key in IDX)) return;
+      if (metaObj == null) return;
+      const prev = clonePlainObject(PENDING_WS_STATE.meta[key]);
+      const next = (typeof metaObj === "object" && !Array.isArray(metaObj)) ? clonePlainObject(metaObj) : metaObj;
+      PENDING_WS_STATE.meta[key] = (typeof next === "object" && !Array.isArray(next)) ? { ...prev, ...next } : next;
+      PENDING_WS_STATE.has = true;
+    }
+
+    function coalescePendingMessage(obj) {
+      if (!obj || typeof obj !== "object") return;
+      PENDING_WS_STATE.has = true;
+
+      if (obj.values && typeof obj.values === "object" && !Array.isArray(obj.values)) {
+        const metaAll = obj._meta || {};
+        for (const [key, value] of Object.entries(obj.values)) {
+          if (!(key in IDX)) continue;
+          PENDING_WS_STATE.values[key] = value;
+          if (Object.prototype.hasOwnProperty.call(metaAll, key)) {
+            mergePendingMeta(key, metaAll[key]);
+          }
+        }
+        return;
+      }
+
+      if ("key" in obj) {
+        const key = obj.key;
+        if (!(key in IDX)) return;
+        if (obj.meta) mergePendingMeta(key, obj.meta);
+        if (obj.value !== undefined) PENDING_WS_STATE.byKey[key] = obj.value;
+        return;
+      }
+
+      const metaAll = obj._meta || {};
+      const generic = PENDING_WS_STATE.generic || {};
+      for (const g of GAUGES) {
+        if (Object.prototype.hasOwnProperty.call(metaAll, g.key)) {
+          mergePendingMeta(g.key, metaAll[g.key]);
+        }
+        if (Object.prototype.hasOwnProperty.call(obj, g.key)) {
+          generic[g.key] = obj[g.key];
+        }
+      }
+      PENDING_WS_STATE.generic = generic;
+    }
+
+    function buildPendingSnapshotMessage() {
+      if (!PENDING_WS_STATE.has) return null;
+      const values = {
+        ...PENDING_WS_STATE.generic,
+        ...PENDING_WS_STATE.values,
+        ...PENDING_WS_STATE.byKey,
+      };
+      return { _meta: PENDING_WS_STATE.meta, values };
+    }
+
+    function lockWsProcessing() {
+      refreshProcessingLocked = true;
+      clearPendingWsState();
+      if (refreshUnlockTimer) {
+        clearTimeout(refreshUnlockTimer);
+        refreshUnlockTimer = null;
+      }
+    }
+
+    function unlockWsProcessingAndFlush() {
+      if (refreshUnlockTimer) {
+        clearTimeout(refreshUnlockTimer);
+        refreshUnlockTimer = null;
+      }
+      refreshProcessingLocked = false;
+      const pending = buildPendingSnapshotMessage();
+      clearPendingWsState();
+      if (pending) processDashboardMessage(pending);
+    }
+
+    function getNeedleSweepTotalMs(delayMs = 0) {
+      const riseMs = Math.max(50, Number(SWEEP_DURATION) || 0);
+      const holdMs = Math.max(0, Number(SWEEP_HOLD) || 0);
+      const returnFactor = Math.max(0.1, Number(SWEEP_RETURN_FACTOR) || 0.9);
+      const fallMs = Math.max(50, Math.round(riseMs * returnFactor));
+      const idleHoldMs = Math.max(0, Number(SWEEP_IDLE_HOLD) || 0);
+      const startDelayMs = Math.max(0, Number(SWEEP_START_DELAY) || 0);
+      return Math.max(0, Number(delayMs) || 0) + startDelayMs + riseMs + holdMs + fallMs + idleHoldMs + 80;
+    }
+
+    function scheduleVisibleNeedleSweep(delayMs = 180, onDone = null) {
+      if (!needle_sweep) {
+        if (typeof onDone === "function") onDone();
+        return;
+      }
+      if (document.visibilityState !== "visible") {
+        if (typeof onDone === "function") onDone();
+        return;
+      }
+
+      if (visibleSweepTimer) clearTimeout(visibleSweepTimer);
+      visibleSweepTimer = setTimeout(() => {
+        visibleSweepTimer = null;
+        if (document.visibilityState !== "visible") {
+          if (typeof onDone === "function") onDone();
+          return;
+        }
+        if (FULLSCREEN_CARD) {
+          if (typeof onDone === "function") onDone();
+          return;
+        }
+        runNeedleSweepForPage(PAGE_STATE.current);
+      }, Math.max(0, Number(delayMs) || 0));
+
+      if (typeof onDone === "function") {
+        if (refreshUnlockTimer) clearTimeout(refreshUnlockTimer);
+        refreshUnlockTimer = setTimeout(onDone, getNeedleSweepTotalMs(delayMs));
+      }
+    }
+
+    function resetToFirstPageForRefresh() {
+      // Fullscreen verlassen und Seite 1 vorbereiten, ohne sichtbare Slide-Animation.
+      if (FULLSCREEN_CARD) {
+        FULLSCREEN_CARD = null;
+        FULLSCREEN_GAUGE_KEY = null;
+        FULLSCREEN_PAGE_INDEX = null;
+        FULLSCREEN_SLOT = null;
+        fullscreenViewport.classList.remove("active");
+        fullscreenViewport.setAttribute("aria-hidden", "true");
+      }
+
+      PAGE_STATE.current = 0;
+      SELECTED_SLOT = null;
+      SELECTED_TILE_FRAME_VISIBLE = false;
+      if (selectedTileHideTimer) {
+        clearTimeout(selectedTileHideTimer);
+        selectedTileHideTimer = null;
+      }
+      updatePageTransform(false);
+      applyResponsiveSizing();
+      updatePageArrowVisibility();
+      updatePageIndicator();
+    }
+
+    function resetAllGaugesToInitialZeroState() {
+      // Verhalten wie beim ersten HTML-Start:
+      // Alle Live-Werte und animierten Anzeige-Werte auf 0 setzen.
+      GAUGES.forEach(g => {
+        STATE[g.key] = 0;
+        DISPLAY[g.key] = 0;
+        VALUE_RECEIVED[g.key] = false;
+      });
+
+      // Lokale 0-100-Messung ebenfalls zurücksetzen, ohne zusätzliche Animation auszulösen.
+      SPEED_MEASURE_LOCAL.active = false;
+      SPEED_MEASURE_LOCAL.startPerfMs = 0;
+      if (SPEED_MEASURE_RAF != null) {
+        cancelAnimationFrame(SPEED_MEASURE_RAF);
+        SPEED_MEASURE_RAF = null;
+      }
+
+      // Alte Animationen/Sweeps komplett verwerfen.
+      SWEEP_LOCK.token++;
+      SWEEP_LOCK.keys.clear();
+      SWEEP_LOCK.pageIndex = null;
+      cancelAnimationsForKeys(GAUGES.map(g => g.key));
+
+      // Gepufferte Altwerte aus dem Hintergrund verwerfen.
+      clearPendingWsState();
+
+      // Sofort 0 zeichnen, damit der Sweep wirklich von 0/Min startet.
+      GAUGES.forEach(g => renderKey(g.key));
+    }
+
+        function pauseDashboardWhileHidden() {
+      if (visibleSweepTimer) {
+        clearTimeout(visibleSweepTimer);
+        visibleSweepTimer = null;
+      }
+      if (refreshUnlockTimer) {
+        clearTimeout(refreshUnlockTimer);
+        refreshUnlockTimer = null;
+      }
+      refreshProcessingLocked = false;
+      clearPendingWsState();
+
+      // Laufende Animationen/Sweep abbrechen, damit beim Wiederöffnen nichts Altes weiterläuft.
+      SWEEP_LOCK.token++;
+      SWEEP_LOCK.keys.clear();
+      SWEEP_LOCK.pageIndex = null;
+      cancelAnimationsForKeys(GAUGES.map(g => g.key));
+
+      metaRequested = false;
+      resetToFirstPageForRefresh();
+    }
+
+    function refreshDashboardWhenVisible() {
+      resetToFirstPageForRefresh();
+      lockWsProcessing();
+      resetAllGaugesToInitialZeroState();
+
+      // Frischen Snapshot inkl. Meta vom Python-Hub holen.
+      // Während des Sweeps werden eingehende WS-Daten nur gesammelt, aber nicht gezeichnet/verarbeitet.
+      metaRequested = false;
+      requestMetaNow();
+
+      if (!hudiy.inputFocus) {
+        startReconnectLoop();
+      }
+
+      scheduleVisibleNeedleSweep(220, unlockWsProcessingAndFlush);
+    }
+
+    function handleDashboardVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        refreshDashboardWhenVisible();
+      } else {
+        pauseDashboardWhileHidden();
+      }
+    }
+
+    function scheduleSelectedTileFrameAutoHide() {
+      if (selectedTileHideTimer) clearTimeout(selectedTileHideTimer);
+      if (!SELECTED_TILE_FRAME_VISIBLE) return;
+      selectedTileHideTimer = setTimeout(() => {
+        SELECTED_TILE_FRAME_VISIBLE = false;
+        selectedTileHideTimer = null;
+        updateSelectedTileVisual();
+      }, KEY_SELECTION_AUTO_HIDE_MS);
+    }
+
+    function showSelectedTileFrame() {
+      SELECTED_TILE_FRAME_VISIBLE = true;
+      scheduleSelectedTileFrameAutoHide();
+      updateSelectedTileVisual();
+    }
+
+    function hideSelectedTileFrame() {
+      SELECTED_TILE_FRAME_VISIBLE = false;
+      if (selectedTileHideTimer) {
+        clearTimeout(selectedTileHideTimer);
+        selectedTileHideTimer = null;
+      }
+      updateSelectedTileVisual();
+    }
+
+    function logKeyNavState(source = "") {
+      if (!DEBUG && !KEY_NAV_DEBUG) return;
+      const mode = FULLSCREEN_CARD ? "fullscreen" : "grid";
+      const focus = (window.hudiy && typeof hudiy.inputFocus === "boolean") ? hudiy.inputFocus : "n/a";
+      const activated = (window.hudiy && typeof hudiy.activated === "boolean") ? hudiy.activated : "n/a";
+      log(`[keynav:${source}] mode=${mode} page=${PAGE_STATE.current + 1}/${PAGE_STATE.count} selected=${SELECTED_SLOT ?? "-"} fullscreen=${FULLSCREEN_SLOT ?? "-"} focus=${focus} active=${activated}`);
+    }
+
+    function getSlotItemBySlot(slot) {
+      return getConfiguredGaugeSlots().find(item => item.slot === slot) || null;
+    }
+
+    function getConfiguredSlotsForPage(pageIndex = PAGE_STATE.current) {
+      return getConfiguredGaugeSlots().filter(item => item.pageIndex === pageIndex);
+    }
+
+    function clearSelectedTile() {
+      SELECTED_SLOT = null;
+      hideSelectedTileFrame();
+    }
+
+    function updateSelectedTileVisual() {
+      document.querySelectorAll(".card.key-selected").forEach(card => card.classList.remove("key-selected"));
+      if (FULLSCREEN_CARD || SELECTED_SLOT == null || !SELECTED_TILE_FRAME_VISIBLE) {
+        logKeyNavState("visual-clear");
+        return;
+      }
+
+      const selected = getSlotItemBySlot(SELECTED_SLOT);
+      if (!selected) {
+        SELECTED_SLOT = null;
+        logKeyNavState("visual-missing");
+        return;
+      }
+
+      const card = document.querySelector(`.card[data-page-index="${selected.pageIndex}"][data-slot="${selected.slot}"]`);
+      if (card) {
+        card.classList.add("key-selected");
+      }
+      logKeyNavState("visual-update");
+    }
+
+    function setSelectedSlot(slot, opts = {}) {
+      const item = getSlotItemBySlot(slot);
+      if (!item) return false;
+
+      SELECTED_SLOT = item.slot;
+      if (opts.showFrame !== false) {
+        SELECTED_TILE_FRAME_VISIBLE = true;
+        scheduleSelectedTileFrameAutoHide();
+      }
+      if (!FULLSCREEN_CARD && opts.changePage !== false && PAGE_STATE.current !== item.pageIndex) {
+        goToPage(item.pageIndex, { preserveSelection: true });
+      } else {
+        updateSelectedTileVisual();
+      }
+      return true;
+    }
+
+    function moveSelectedTile(delta) {
+      const slots = getConfiguredGaugeSlots();
+      if (!slots.length) return false;
+
+      const currentIndex = slots.findIndex(item => item.slot === SELECTED_SLOT);
+      let target = null;
+
+      if (currentIndex < 0) {
+        const visibleSlots = getConfiguredSlotsForPage(PAGE_STATE.current);
+        if (visibleSlots.length) {
+          target = delta >= 0 ? visibleSlots[0] : visibleSlots[visibleSlots.length - 1];
+        } else {
+          target = delta >= 0 ? slots[0] : slots[slots.length - 1];
+        }
+      } else {
+        const nextIndex = (currentIndex + delta + slots.length) % slots.length;
+        target = slots[nextIndex];
+      }
+
+      if (!target) return false;
+      const ok = setSelectedSlot(target.slot, { changePage: true });
+      logKeyNavState(delta >= 0 ? "tile-next" : "tile-prev");
+      return ok;
+    }
+
+    function handleDashboardKeyNavigation(delta, source = "keynav") {
+      userHasInteracted = true;
+
+      if (FULLSCREEN_CARD) {
+        moveFullscreenSlot(delta);
+        logKeyNavState(source);
+        return true;
+      }
+
+      return moveSelectedTile(delta);
+    }
+
+    function handleDashboardTrigger(source = "trigger") {
+      userHasInteracted = true;
+
+      if (FULLSCREEN_CARD) {
+        showX(true, true);
+        logKeyNavState(source);
+        return true;
+      }
+
+      // Wenn die Touch-Controls sichtbar sind und das X vorausgewählt ist,
+      // soll Enter das X bestätigen statt ein zuvor gemerktes Tile zu öffnen.
+      if (closeX.classList.contains("visible") && (document.activeElement === closeX || closeX.classList.contains("focused"))) {
+        hudiyClosePage();
+        logKeyNavState(source + "-close-x");
+        return true;
+      }
+
+      // Wichtig: SELECTED_SLOT bleibt intern auch nach dem Auto-Hide erhalten.
+      // Ein Tile darf aber nur geöffnet werden, solange der Auswahlrahmen sichtbar ist.
+      // Nach 5 s Auto-Hide bedeutet Enter: Touch-Controls mit X/Pfeilen einblenden.
+      if (SELECTED_SLOT != null && SELECTED_TILE_FRAME_VISIBLE) {
+        const selected = getSlotItemBySlot(SELECTED_SLOT);
+        const card = selected ? document.querySelector(`.card[data-page-index="${selected.pageIndex}"][data-slot="${selected.slot}"]`) : null;
+        if (card && card.dataset.key) {
+          enterGaugeFullscreen(card);
+          updateSelectedTileVisual();
+          logKeyNavState(source);
+          return true;
+        }
+      }
+
+      showX(true, true);
+      logKeyNavState(source + "-show-controls");
+      return true;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const tag = (e.target && e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.isComposing) return;
+
+      if (e.key === "1") {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDashboardKeyNavigation(-1, "key-1");
+      } else if (e.key === "2") {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDashboardKeyNavigation(1, "key-2");
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDashboardTrigger("key-enter");
+      } else if (e.key === "Escape") {
+        if (FULLSCREEN_CARD) {
+          e.preventDefault();
+          e.stopPropagation();
+          exitGaugeFullscreen();
+        } else if (closeX.classList.contains("visible")) {
+          e.preventDefault();
+          e.stopPropagation();
+          hideX();
+        }
+      }
+    }, true);
+
+    function goToPage(index, opts = {}) {
+      if (FULLSCREEN_CARD) return;
+      const clamped = Math.max(0, Math.min(PAGE_STATE.count - 1, index));
+      if (clamped === PAGE_STATE.current) {
+        updateSelectedTileVisual();
+        return;
+      }
+      PAGE_STATE.current = clamped;
+
+      if (!opts.preserveSelection) {
+        const selected = SELECTED_SLOT == null ? null : getSlotItemBySlot(SELECTED_SLOT);
+        if (!selected || selected.pageIndex !== PAGE_STATE.current) {
+          SELECTED_SLOT = null;
+          SELECTED_TILE_FRAME_VISIBLE = false;
+        }
+      }
+
+      updatePageTransform(true);
+      updateSelectedTileVisual();
+      applyResponsiveSizing();
+    }
+
+    function goToFullscreenSlotByIndex(index, animate = true) {
+      const slots = getConfiguredGaugeSlots();
+      const target = slots[index];
+      if (!target) return;
+
+      FULLSCREEN_PAGE_INDEX = target.pageIndex;
+      FULLSCREEN_SLOT = target.slot;
+      FULLSCREEN_GAUGE_KEY = target.key;
+      FULLSCREEN_CARD = getFullscreenCard() || FULLSCREEN_CARD;
+      PAGE_STATE.current = target.pageIndex;
+      FULLSCREEN_KEEP_TRACK_ANIMATION = animate;
+      applyResponsiveSizing();
+      updateFullscreenTrackTransform(animate);
+      requestAnimationFrame(() => { FULLSCREEN_KEEP_TRACK_ANIMATION = false; });
+    }
+
+    function moveFullscreenSlot(delta) {
+      const slots = getConfiguredGaugeSlots();
+      if (!slots.length) return false;
+      const currentIndex = getFullscreenSlotNavIndex();
+      if (currentIndex < 0) return false;
+
+      const nextIndex = currentIndex + delta;
+
+      // Kein ESC nötig: Am Rand des Fullscreen-Tracks führt ein weiterer Links-/Rechtsdruck
+      // zurück in die Grid-Ansicht und markiert das zuletzt geöffnete Tile.
+      if (nextIndex < 0 || nextIndex >= slots.length) {
+        const restoreSlot = FULLSCREEN_SLOT;
+        exitGaugeFullscreen({ selectSlot: restoreSlot, showFrame: true });
+        logKeyNavState(delta >= 0 ? "fullscreen-edge-exit-next" : "fullscreen-edge-exit-prev");
+        return true;
+      }
+
+      goToFullscreenSlotByIndex(nextIndex);
+      return true;
+    }
+
+    function nextPage() {
+      if (FULLSCREEN_CARD) {
+        moveFullscreenSlot(1);
+        return;
+      }
+      goToPage(PAGE_STATE.current + 1);
+    }
+
+    function prevPage() {
+      if (FULLSCREEN_CARD) {
+        moveFullscreenSlot(-1);
+        return;
+      }
+      goToPage(PAGE_STATE.current - 1);
+    }
+
+    pageArrowLeft.addEventListener("click", prevPage);
+    pageArrowRight.addEventListener("click", nextPage);
+
+    [pageArrowLeft, pageArrowRight].forEach(btn => {
+      btn.addEventListener("focus", () => btn.classList.add("focused"));
+      btn.addEventListener("blur", () => btn.classList.remove("focused"));
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+    });
+
+    let swipeStartX = 0;
+    let swipeStartY = 0;
+    let swipeTracking = false;
+    let swipeSource = null;
+
+    function handleSwipePointerDown(e) {
+      swipeTracking = true;
+      swipeSource = e.currentTarget;
+      swipeStartX = e.clientX;
+      swipeStartY = e.clientY;
+    }
+
+    function handleSwipePointerUp(e) {
+      if (!swipeTracking) return;
+      const sameSource = swipeSource === e.currentTarget;
+      swipeTracking = false;
+      swipeSource = null;
+      if (!sameSource) return;
+
+      const dx = e.clientX - swipeStartX;
+      const dy = e.clientY - swipeStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        if (dx < 0) nextPage();
+        else prevPage();
+      }
+    }
+
+    function handleSwipePointerCancel() {
+      swipeTracking = false;
+      swipeSource = null;
+    }
+
+    [pagesViewport, fullscreenViewport].forEach(el => {
+      el.addEventListener("pointerdown", handleSwipePointerDown);
+      el.addEventListener("pointerup", handleSwipePointerUp);
+      el.addEventListener("pointercancel", handleSwipePointerCancel);
+    });
+
+    function getCardIdentity(card) {
+      if (!card) return null;
+      return {
+        pageIndex: Number(card.dataset.pageIndex),
+        slot: Number(card.dataset.slot),
+        key: card.dataset.key || null,
+      };
+    }
+
+    function getFullscreenCard() {
+      if (FULLSCREEN_PAGE_INDEX == null || FULLSCREEN_SLOT == null) return null;
+      return document.querySelector(`.card[data-page-index="${FULLSCREEN_PAGE_INDEX}"][data-slot="${FULLSCREEN_SLOT}"]`);
+    }
+
+    function enterGaugeFullscreen(card) {
+      const ident = getCardIdentity(card);
+      if (!ident || !ident.key) return;
+
+      FULLSCREEN_PAGE_INDEX = ident.pageIndex;
+      FULLSCREEN_SLOT = ident.slot;
+      FULLSCREEN_GAUGE_KEY = ident.key;
+      FULLSCREEN_CARD = card;
+      PAGE_STATE.current = ident.pageIndex || 0;
+      updatePageTransform(false);
+      updateFullscreenTrackTransform(false);
+      applyResponsiveSizing();
+    }
+
+    function exitGaugeFullscreen(opts = {}) {
+      const restoreSlot = opts.selectSlot ?? FULLSCREEN_SLOT;
+
+      FULLSCREEN_CARD = null;
+      FULLSCREEN_GAUGE_KEY = null;
+      FULLSCREEN_PAGE_INDEX = null;
+      FULLSCREEN_SLOT = null;
+      fullscreenViewport.classList.remove("active");
+      fullscreenViewport.setAttribute("aria-hidden", "true");
+
+      if (restoreSlot != null) {
+        const restored = getSlotItemBySlot(restoreSlot);
+        if (restored) {
+          SELECTED_SLOT = restored.slot;
+          PAGE_STATE.current = restored.pageIndex;
+          if (opts.showFrame !== false) {
+            SELECTED_TILE_FRAME_VISIBLE = true;
+            scheduleSelectedTileFrameAutoHide();
+          }
+        }
+      }
+
+      updatePageTransform(false);
+      updateSelectedTileVisual();
+      applyResponsiveSizing();
+    }
+
+    function toggleGaugeFullscreen(card) {
+      const ident = getCardIdentity(card);
+      if (!ident || !ident.key) return;
+      if (FULLSCREEN_PAGE_INDEX === ident.pageIndex && FULLSCREEN_SLOT === ident.slot) exitGaugeFullscreen();
+      else enterGaugeFullscreen(card);
+    }
+
+    fullscreenViewport.addEventListener("click", (e) => {
+      if (!FULLSCREEN_CARD) return;
+      if (e.target.closest(".fullscreen-card")) return;
+      exitGaugeFullscreen();
+    });
+
+    function setVisualMode() {
+      const root = document.documentElement.style;
+      if (DEBUG) {
+        root.setProperty("--grid-gap-x", "0.8vmin");
+        root.setProperty("--grid-gap-y", "0px");
+        root.setProperty("--grid-pad", "0px");
+        root.setProperty("--card-shadow", "0 0.4vmin 1.4vmin rgba(0,0,0,0.35)");
+        document.body.classList.add('debug');
+      } else {
+        root.setProperty("--grid-gap-x", "0px");
+        root.setProperty("--grid-gap-y", "0px");
+        root.setProperty("--grid-pad", "0px");
+        root.setProperty("--card-shadow", "none");
+        document.body.classList.remove('debug');
+      }
+    }
+    setVisualMode();
+
+    function applyHudiyColorsFromScheme(){
+      const cs = (window.hudiy && hudiy.colorScheme) || null;
+      const isDark = cs?.darkThemeEnabled === true;
+
+      const bgCandidate = isDark
+        ? (cs?.surfaceContainerLowest || cs?.surface || cs?.background || "#0b1220")
+        : (cs?.background || cs?.surface || "#f7f7f7");
+
+      const fgCandidate = isDark
+        ? (cs?.onSurface || cs?.onBackground || "#e6eaf2")
+        : (cs?.onBackground || cs?.onSurface || "#111111");
+
+      const root = document.documentElement.style;
+      root.setProperty("--bg", bgCandidate);
+      root.setProperty("--fg", fgCandidate);
+
+      document.body.style.background = bgCandidate;
+      document.body.style.color = fgCandidate;
+
+      const arrowBg = isDark ? "rgba(150, 160, 175, 0.22)" : "rgba(80, 90, 105, 0.18)";
+      const arrowBgActive = isDark ? "rgba(175, 185, 200, 0.30)" : "rgba(95, 105, 120, 0.24)";
+      root.setProperty("--arrow-bg", arrowBg);
+      root.setProperty("--arrow-bg-active", arrowBgActive);
+
+      let meta = document.querySelector('meta[name="theme-color"]');
+      if(!meta){
+        meta = document.createElement("meta");
+        meta.setAttribute("name","theme-color");
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute("content", bgCandidate);
+    }
+
+    (function setupHudiyTheme() {
+      window.hudiy = window.hudiy || {};
+      const repaintSoon = () =>
+        setTimeout(() => {
+          applyHudiyColorsFromScheme();
+          window.forceRepaintGauges && window.forceRepaintGauges();
+        }, 0);
+
+      const prevAttached = hudiy.onAttached;
+      hudiy.onAttached = function () {
+        try { if (typeof prevAttached === 'function') prevAttached(); } catch {}
+        applyHudiyColorsFromScheme();
+        try { hudiy.onInputFocusChanged && hudiy.onInputFocusChanged(); } catch {}
+        repaintSoon();
+      };
+
+      hudiy.onColorSchemeChanged = function(){
+        applyHudiyColorsFromScheme();
+        repaintSoon();
+      };
+
+      applyHudiyColorsFromScheme();
+    })();
+
+    const STATE   = Object.create(null);
+    const DISPLAY = Object.create(null);
+    const META    = Object.create(null);
+    const LAST_TEMP_UNIT  = { coolant:null, outside_temp:null, cpu_temp:null };
+    const LAST_SPEED_UNIT = { speed:null };
+    const VALUE_RECEIVED = Object.create(null);
+
+    const SPEED_MEASURE_LOCAL = {
+      active: false,
+      startPerfMs: 0,
+    };
+
+    let SPEED_MEASURE_RAF = null;
+
+    function startLocalSpeedMeasure() {
+      // Hudiy/HTML entscheidet NICHT, ob die Messung starten darf.
+      // Python sendet speed_measure=-2.0 genau dann, wenn die Messung wirklich startet.
+      delete ANIM.speed_measure;
+      SPEED_MEASURE_LOCAL.active = true;
+      SPEED_MEASURE_LOCAL.startPerfMs = performance.now();
+      STATE.speed_measure = 0;
+      DISPLAY.speed_measure = 0;
+      VALUE_RECEIVED.speed_measure = true;
+      renderKey("speed_measure");
+
+      if (SPEED_MEASURE_RAF == null) {
+        SPEED_MEASURE_RAF = requestAnimationFrame(stepLocalSpeedMeasure);
+      }
+    }
+
+    function stopLocalSpeedMeasure() {
+      SPEED_MEASURE_LOCAL.active = false;
+      if (SPEED_MEASURE_RAF != null) {
+        cancelAnimationFrame(SPEED_MEASURE_RAF);
+        SPEED_MEASURE_RAF = null;
+      }
+    }
+
+    function resetLocalSpeedMeasure() {
+      stopLocalSpeedMeasure();
+      delete ANIM.speed_measure;
+      SPEED_MEASURE_LOCAL.startPerfMs = 0;
+      STATE.speed_measure = 0;
+      DISPLAY.speed_measure = 0;
+      VALUE_RECEIVED.speed_measure = true;
+      renderKey("speed_measure");
+    }
+
+    function disableLocalSpeedMeasure() {
+      resetLocalSpeedMeasure();
+    }
+
+    function acceptFinalSpeedMeasure(num) {
+      const finalValue = Number.isFinite(Number(num)) ? Number(num) : 0;
+      stopLocalSpeedMeasure();
+      delete ANIM.speed_measure;
+      STATE.speed_measure = finalValue;
+      DISPLAY.speed_measure = finalValue;
+      VALUE_RECEIVED.speed_measure = true;
+      renderKey("speed_measure");
+    }
+
+    function stepLocalSpeedMeasure() {
+      if (SPEED_MEASURE_LOCAL.active) {
+        const elapsed = (performance.now() - SPEED_MEASURE_LOCAL.startPerfMs) / 1000;
+        STATE.speed_measure = elapsed;
+        DISPLAY.speed_measure = elapsed;
+        VALUE_RECEIVED.speed_measure = true;
+        renderKey("speed_measure");
+        SPEED_MEASURE_RAF = requestAnimationFrame(stepLocalSpeedMeasure);
+      } else {
+        SPEED_MEASURE_RAF = null;
+      }
+    }
+
+    function handleSpeedMeasureApiValue(num, allowStart) {
+      // Numeric control protocol sent by Python on getPidValue(7):
+      //   -1.0 = disabled/disarm and clear display
+      //    0.0 = reset/ready, but do not start animation
+      //   -2.0 = start the local gauge animation
+      //   >0.0 = final result; stop animation and show Python result
+      if (num < -1.5) {
+        if (allowStart) startLocalSpeedMeasure();
+      } else if (num < -0.5) {
+        disableLocalSpeedMeasure();
+      } else if (num <= 0.001) {
+        resetLocalSpeedMeasure();
+      } else {
+        acceptFinalSpeedMeasure(num);
+      }
+    }
+
+        const ANIM = Object.create(null);
+    let ANIM_RAF = null;
+
+    function ensureAnimLoop(){
+      if (ANIM_RAF != null) return;
+      ANIM_RAF = requestAnimationFrame(stepAnimations);
+    }
+
+    function stepAnimations(){
+      let any = false;
+      for (const key in ANIM){
+        const a = ANIM[key];
+        const t  = Math.min(1, (performance.now() - a.start) / a.dur);
+        const et = ANIM_CFG.ease(t);
+        DISPLAY[key] = a.from + (a.to - a.from) * et;
+        renderKey(key);
+        if (t >= 1){
+          DISPLAY[key] = a.to;
+          delete ANIM[key];
+        } else {
+          any = true;
+        }
+      }
+      if (any) ANIM_RAF = requestAnimationFrame(stepAnimations);
+      else ANIM_RAF = null;
+    }
+
+    function scheduleValueAnimation(key, toVal){
+      const idx = IDX[key];
+      if (idx === undefined) return;
+      const g   = GAUGES[idx];
+      const span = Math.max(1, (g.max - g.min));
+      const from = (DISPLAY[key] != null) ? DISPLAY[key] : toVal;
+
+      if (!ANIM_CFG.enabled || from === toVal){
+        DISPLAY[key] = toVal;
+        renderKey(key);
+        return;
+      }
+
+      const rel = Math.min(1, Math.abs(toVal - from) / span);
+      const dur = Math.max(ANIM_CFG.minMs, ANIM_CFG.baseMs + rel * ANIM_CFG.extraMs);
+
+      ANIM[key] = { from, to: toVal, start: performance.now(), dur };
+      ensureAnimLoop();
+    }
+
+    function c2f(c){ return c * 9/5 + 32; }
+    function kmh2mph(k){ return k * 0.621371; }
+
+    const UNIT_KIND = { speed:"speed", coolant:"temp", outside_temp:"temp", cpu_temp:"temp" };
+
+    function formatValue(key, val) {
+      const spec = VALUE_FORMAT[key] || {};
+      const dec  = Number.isInteger(spec.decimals) ? spec.decimals : 0;
+      if (typeof val !== "number" || !isFinite(val)) return "";
+      return val.toFixed(dec);
+    }
+
+    function formatSmart(value) {
+      if (typeof value !== "number" || !isFinite(value)) return String(value ?? "");
+      if (Number.isInteger(value)) return value.toString();
+      return value.toFixed(2).replace(/\.?0+$/, "");
+    }
+
+    function updateGaugeLimitsFromMeta(key) {
+      const idx = IDX[key];
+      if (idx === undefined) return;
+      const g   = GAUGES[idx];
+      const base = BASE_LIMITS[key];
+      if (!base) return;
+
+      const m = META[key] || {};
+      if (key === "cpu_freq_mhz") {
+        const minM = Number(m.min_mhz);
+        const maxM = Number(m.max_mhz);
+        g.min = Number.isFinite(minM) ? minM : base.min;
+        g.max = Number.isFinite(maxM) ? maxM : base.max;
+      } else if (UNIT_KIND[key] === "temp") {
+        const out = m.unit || "°C";
+        g.min = (out === "°F") ? c2f(base.min) : base.min;
+        g.max = (out === "°F") ? c2f(base.max) : base.max;
+      } else if (UNIT_KIND[key] === "speed") {
+        const ru = m.current_unit || "km/h";
+        const mph = String(ru).toLowerCase() === "mph";
+        g.min = mph ? kmh2mph(base.min) : base.min;
+        g.max = mph ? kmh2mph(base.max) : base.max;
+      } else {
+        g.min = base.min;
+        g.max = base.max;
+      }
+
+      g.min = Number.isFinite(g.min) ? g.min : base.min;
+      g.max = Number.isFinite(g.max) ? g.max : base.max;
+    }
+
+    function mapAlertColor(c){
+      if(!c) return null;
+      const k = String(c).trim().toLowerCase();
+      return ALERT_COLOR_MAP[k] || c;
+    }
+
+    function resolveAlertColor(key, value) {
+      const spec = ALERTS[key];
+      if (!spec || spec.use_alerts === false) return null;
+      if (!Array.isArray(spec.thresholds) || !spec.thresholds.length) return null;
+      const m = META[key];
+      const kind = UNIT_KIND[key] || null;
+      let color = null;
+
+      for (const rule of spec.thresholds) {
+        let gteThr = rule.gte;
+        let lteThr = rule.lte;
+
+        if (m && kind) {
+          if (typeof gteThr === "number") {
+            if (kind === "speed") {
+              const unit = m.current_unit || "km/h";
+              if (String(unit).toLowerCase() === "mph") gteThr = kmh2mph(gteThr);
+            } else if (kind === "temp") {
+              const unit = m.unit || "°C";
+              if (unit === "°F") gteThr = c2f(gteThr);
+            }
+          }
+
+          if (typeof lteThr === "number") {
+            if (kind === "speed") {
+              const unit = m.current_unit || "km/h";
+              if (String(unit).toLowerCase() === "mph") lteThr = kmh2mph(lteThr);
+            } else if (kind === "temp") {
+              const unit = m.unit || "°C";
+              if (unit === "°F") lteThr = c2f(lteThr);
+            }
+          }
+        }
+
+        if (typeof gteThr === "number" && value >= gteThr) color = rule.color;
+        if (typeof lteThr === "number" && value <= lteThr) color = rule.color;
+      }
+
+      return mapAlertColor(color);
+    }
+
+    function takeFittingPrefix(ctx, text, maxW) {
+      const chars = Array.from(text);
+      if (chars.length === 0) return { fit: "", rest: "" };
+      if (ctx.measureText(text).width <= maxW) return { fit: text, rest: "" };
+      let lo = 1, hi = chars.length, best = 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const candidate = chars.slice(0, mid).join("");
+        if (ctx.measureText(candidate).width <= maxW) { best = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
+      }
+      if (best < 1) best = 1;
+      const fit = chars.slice(0, best).join("");
+      const rest = chars.slice(best).join("");
+      return { fit, rest };
+    }
+
+    function wrapTextVariable(ctx, text, x, yStart, getMaxWidth, lineHeight) {
+      const words = String(text).split(/\s+/);
+      let line = "";
+      let rendered = 0;
+      const hyphen = "-";
+      const hyphenW = ctx.measureText(hyphen).width;
+
+      function emitLine(str) {
+        ctx.fillText(str, x, yStart + rendered * lineHeight);
+        rendered++;
+      }
+
+      for (let i = 0; i < words.length; i++) {
+        let word = words[i];
+        const prefix = line ? (line + " " + word) : word;
+        const maxWForThisLine = getMaxWidth(rendered);
+
+        if (ctx.measureText(prefix).width <= maxWForThisLine) {
+          line = prefix;
+          continue;
+        }
+
+        if (line) { emitLine(line); line = ""; }
+        while (word.length > 0) {
+          const maxW = getMaxWidth(rendered);
+          let { fit, rest } = takeFittingPrefix(ctx, word, maxW);
+          if (rest.length > 0 && ctx.measureText(fit).width + hyphenW <= maxW) emitLine(fit + hyphen);
+          else emitLine(fit);
+          word = rest;
+        }
+      }
+
+      if (line) emitLine(line);
+      return rendered;
+    }
+
+    function gaugeLabel(g) {
+      const m = META[g.key];
+      const baseTranslated = (g.labelBase || "").trim();
+
+      if (!VALUE_RECEIVED[g.key]) {
+        if (g.key === "speed") return "km/h";
+        if (g.key === "speed_measure") return baseTranslated || "0 - 100";
+        if (UNIT_KIND[g.key] === "temp") return baseTranslated || "Temp";
+        return baseTranslated;
+      }
+
+      if (!m) return baseTranslated;
+
+      if (g.key === "speed") {
+        const rawUnit = m.current_unit || "km/h";
+        return String(rawUnit).toLowerCase() === "mph" ? "mph" : "km/h";
+      }
+
+      if (g.key === "speed_measure") {
+        const lo = (m.lower_speed ?? 0);
+        const hi = (m.upper_speed ?? 100);
+        const rawUnit = m.unit || "km/h";
+        const unit = String(rawUnit).toLowerCase() === "mph" ? "mph" : "km/h";
+        const inLbl = tLabel("in_word", "in");
+        return `${lo}-${hi} ${unit}\n${inLbl} [s]`;
+      }
+
+      if (UNIT_KIND[g.key] === "temp") {
+        const unit = m.unit || "°C";
+        return baseTranslated ? `${baseTranslated} [${unit}]` : `[${unit}]`;
+      }
+
+      return baseTranslated;
+    }
+
+    function fontString(weight, sizePx) {
+      return `${weight} ${sizePx}px 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif`;
+    }
+
+    function makeValueGradient(ctx, r, start, range) {
+      const a1 = start, a2 = start + range;
+      const x1 = Math.cos(a1) * r, y1 = Math.sin(a1) * r;
+      const x2 = Math.cos(a2) * r, y2 = Math.sin(a2) * r;
+      const g = ctx.createLinearGradient(x1, y1, x2, y2);
+      g.addColorStop(0, GRADIENT.start);
+      g.addColorStop(1, GRADIENT.end);
+      return g;
+    }
+
+    function drawGauge(key, canvas, value, label, minValue, maxValue) {
+      if (!canvas || !CUR_STYLE) return;
+      const s = CUR_STYLE;
+      const minVal = Number.isFinite(+minValue) ? +minValue : 0;
+      const maxVal = Number.isFinite(+maxValue) ? +maxValue : 0;
+      const ctx = canvas.getContext('2d');
+      const effDpr = Number(canvas.dataset.dpr) || (window.devicePixelRatio || 1);
+
+      const W = canvas.width  / effDpr;
+      const H = canvas.height / effDpr;
+      const cx = W / 2, cy = H / 2;
+
+      const start = 0.75 * Math.PI;
+      const range = 1.50 * Math.PI;
+      const end   = start + range;
+
+      const csTheme = (window.hudiy && hudiy.colorScheme) || {};
+      const isDark  = !!csTheme.darkThemeEnabled;
+
+      const trackColor = isDark
+        ? (csTheme.onPrimaryContainer || '#b8b8b8')
+        : (csTheme.primaryContainer   || '#d8d8d8');
+
+      const valueArcColor = isDark
+        ? (csTheme.primaryContainer   || '#6aa0ff')
+        : (csTheme.onPrimaryContainer || '#333333');
+
+      const textColor = csTheme.onSurface || (isDark ? '#eeeeee' : '#111111');
+
+      const num      = Number(value);
+      const vRaw     = Number.isFinite(num) ? num : minVal;
+      const vClamped = Math.max(minVal, Math.min(maxVal, vRaw));
+      const n = (vClamped - minVal) / Math.max(1e-9, (maxVal - minVal));
+      const angle = start + n * range;
+
+      const alertColor = resolveAlertColor(key, vRaw);
+      const applyTo = (ALERTS[key] && ALERTS[key].applyTo) || { value:false, label:false };
+
+      const halfStroke = Math.max(s.arcTrackWidthPx, s.arcValueWidthPx) * 0.5 + 2;
+      const desiredR   = Math.min(W, H) * s.radiusFactor;
+      const r          = Math.max(4, Math.min(desiredR, Math.min(W,H)*0.5 - halfStroke));
+
+      let valueStroke;
+      if (alertColor && applyTo.value) valueStroke = alertColor;
+      else if (GRADIENT.enabled && (!alertColor || GRADIENT.applyOnAlert)) valueStroke = makeValueGradient(ctx, r, start, range);
+      else valueStroke = valueArcColor;
+
+      const valueFill = (alertColor && applyTo.value) ? alertColor : textColor;
+      const labelFill = (alertColor && applyTo.label) ? alertColor : textColor;
+
+      ctx.save();
+      ctx.clearRect(0, 0, W, H);
+      ctx.translate(cx, cy);
+      ctx.scale(CANVAS_X_SQUEEZE, 1);
+
+      ctx.imageSmoothingEnabled = true;
+      try { ctx.imageSmoothingQuality = "high"; } catch {}
+
+      if (DEBUG) {
+        ctx.save();
+        ctx.setLineDash([4,3]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,0,0,0.35)';
+        ctx.strokeRect(-W/2, -H/2, W, H);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r, start, end, false);
+      ctx.strokeStyle = trackColor;
+      ctx.lineWidth = s.arcTrackWidthPx;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r, start, angle, false);
+      ctx.strokeStyle = valueStroke;
+      ctx.lineWidth = s.arcValueWidthPx;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.fillStyle = valueFill;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = fontString(s.valueFontWeight, s.valueFontPx);
+      ctx.fillText(formatValue(key, vRaw), 0, s.valueYOffsetPx);
+
+      const minLbl = Number.isFinite(minVal) ? formatSmart(minVal) : String(minVal);
+      const maxLbl = Number.isFinite(maxVal) ? formatSmart(maxVal) : String(maxVal);
+
+      const insetDeg = (s.minmaxAngleInsetDeg ?? 6);
+      const inset    = (insetDeg * Math.PI) / 180;
+      const rText    = r * (s.minmaxRadius ?? 0.88);
+      const aMin     = start + inset;
+      const aMax     = end - inset;
+
+      const minFontPx = s.minLabelFontPx || s.minmaxFontPx;
+      const maxFontPx = s.maxLabelFontPx || s.minmaxFontPx;
+
+      ctx.font = fontString(s.minmaxFontWeight, minFontPx);
+      const minW = ctx.measureText(minLbl).width;
+      const minH = minFontPx * 1.2;
+      const minX = Math.cos(aMin) * rText + s.minLabelOffsetXPx;
+      const minY = Math.sin(aMin) * rText + s.minLabelOffsetYPx;
+
+      ctx.font = fontString(s.minmaxFontWeight, maxFontPx);
+      const maxW = ctx.measureText(maxLbl).width;
+      const maxH = maxFontPx * 1.2;
+      const maxX = Math.cos(aMax) * rText + s.maxLabelOffsetXPx;
+      const maxY = Math.sin(aMax) * rText + s.maxLabelOffsetYPx;
+
+      const lh = s.labelLineHeightPx || Math.round(s.labelFontPx * 1.15);
+      ctx.fillStyle = labelFill;
+      ctx.font = fontString(s.labelFontWeight, s.labelFontPx);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+
+      const textMargin = 6;
+      const innerR = Math.max(2, r - s.arcValueWidthPx * 0.5 - textMargin);
+      const yStart = s.labelYOffsetPx;
+
+      const TWO_PI = Math.PI * 2;
+      const inRange = (theta, a0, a1) => {
+        const len = a1-a0;
+        const a = ((theta-a0)%TWO_PI+TWO_PI)%TWO_PI;
+        return a>=0 && a<=len+1e-9;
+      };
+
+      function sideBoundsAtY(y){
+        if (Math.abs(y) > innerR) return {left:null,right:null};
+        const dx = Math.sqrt(Math.max(0, innerR*innerR - y*y));
+        const thetaL = Math.atan2(y, -dx);
+        const thetaR = Math.atan2(y,  dx);
+        let left = null, right = null;
+        if (inRange(thetaL, start, end)) left  = -dx;
+        if (inRange(thetaR, start, end)) right =  dx;
+
+        const rayX = (ang) => {
+          const s = Math.sin(ang);
+          if (Math.abs(s) < 1e-6) return null;
+          const t = y / s;
+          if (t < 0 || t > r) return null;
+          return t * Math.cos(ang);
+        };
+        const xr1 = rayX(start), xr2 = rayX(end);
+        if (xr1 !== null) left  = (left  === null) ? xr1 : Math.min(left,  xr1);
+        if (xr2 !== null) right = (right === null) ? xr2 : Math.max(right, xr2);
+        return {left, right};
+      }
+
+      const capW = W - 4;
+      const halfCap = capW * 0.5;
+
+      function getMaxWidthForLine(lineIndex) {
+        const y = yStart + lineIndex * lh;
+        const b = sideBoundsAtY(y);
+        let leftBound  = (b.left  !== null) ? b.left  : -halfCap;
+        let rightBound = (b.right !== null) ? b.right :  halfCap;
+
+        const vPad = 0.6;
+        if (y > minY - minH*vPad && y < minY + minH*vPad) {
+          leftBound = Math.max(leftBound, minX + minW*0.5 + textMargin);
+        }
+        if (y > maxY - maxH*vPad && y < maxY + maxH*vPad) {
+          rightBound = Math.min(rightBound, maxX - maxW*0.5 - textMargin);
+        }
+
+        return Math.max(0, rightBound - leftBound - 2*textMargin);
+      }
+
+      const blocks = String(label).split("\n");
+      let blockOffset = 0;
+      for (const block of blocks) {
+        const linesRendered = wrapTextVariable(ctx, block, 0, yStart + blockOffset, getMaxWidthForLine, lh);
+        blockOffset += linesRendered * lh;
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = textColor;
+
+      ctx.font = fontString(s.minmaxFontWeight, minFontPx);
+      ctx.fillText(minLbl, minX, minY);
+
+      ctx.font = fontString(s.minmaxFontWeight, maxFontPx);
+      ctx.fillText(maxLbl, maxX, maxY);
+
+      ctx.restore();
+    }
+
+    function renderKey(key) {
+      const idx = IDX[key];
+      if (idx === undefined) return;
+      const g = GAUGES[idx];
+      const canvases = CANVASES_BY_GAUGE_KEY[key] || [];
+      if (!canvases.length) return;
+      const val = (DISPLAY[key] != null) ? DISPLAY[key] : STATE[key];
+      canvases.forEach(canvas => drawGauge(key, canvas, val, gaugeLabel(g), g.min, g.max));
+    }
+
+    window.forceRepaintGauges = function() {
+      try {
+        document.querySelectorAll("canvas").forEach(c => sizeCanvasToActualRect(c));
+        GAUGES.forEach(g => renderKey(g.key));
+      } catch (_) {}
+    };
+
+    function handleMessage(obj){
+      // Wenn die HTML im Hintergrund liegt, keine Live-Werte zeichnen/übernehmen.
+      // Beim erneuten Sichtbarwerden wird per request_meta ein frischer Snapshot geholt.
+      if (document.visibilityState !== "visible") return;
+      if (!obj || typeof obj !== "object") return;
+
+      // Während Refresh + Needle-Sweep keine Live-Daten verarbeiten.
+      // Es wird nur der letzte Stand gepuffert und nach dem Sweep einmal angewendet.
+      if (refreshProcessingLocked) {
+        coalescePendingMessage(obj);
+        return;
+      }
+
+      processDashboardMessage(obj);
+    }
+
+    function processDashboardMessage(obj){
+      if (!obj || typeof obj !== "object") return;
+
+      if (obj.values && typeof obj.values === "object" && !Array.isArray(obj.values)) {
+        const metaAll = obj._meta || {};
+
+        for (const [key, value] of Object.entries(obj.values)) {
+          if (!(key in IDX)) continue;
+
+          if (Object.prototype.hasOwnProperty.call(metaAll, key)) {
+            mergeMetaAndUpdate(key, metaAll[key]);
+          }
+
+          const num = Number(value);
+          if (Number.isNaN(num)) continue;
+
+          VALUE_RECEIVED[key] = true;
+
+          if (key === "speed") {
+            STATE[key] = num;
+            if (!isSweepLocked(key)) scheduleValueAnimation(key, num);
+            continue;
+          }
+
+          if (key === "speed_measure") {
+            // Also allow a coalesced live -2.0 start command after refresh/sweep locking.
+            // Python sends a final positive value at the end, so -2.0 should only be cached while a run is active.
+            handleSpeedMeasureApiValue(num, true);
+            continue;
+          }
+
+          STATE[key] = num;
+          if (!isSweepLocked(key)) scheduleValueAnimation(key, num);
+        }
+
+        GAUGES.forEach(g => { if (!ANIM[g.key]) renderKey(g.key); });
+        return;
+      }
+
+      if ("key" in obj) {
+        const key = obj.key;
+        if (!(key in IDX)) return;
+
+        if (obj.meta) mergeMetaAndUpdate(key, obj.meta);
+        if (obj.value !== undefined) {
+          const num = Number(obj.value);
+          if (!Number.isNaN(num)) {
+            VALUE_RECEIVED[key] = true;
+
+            if (key === "speed") {
+              STATE[key] = num;
+              if (!isSweepLocked(key)) scheduleValueAnimation(key, num);
+            } else if (key === "speed_measure") {
+              handleSpeedMeasureApiValue(num, true);
+            } else {
+              STATE[key] = num;
+              if (!isSweepLocked(key)) scheduleValueAnimation(key, num);
+            }
+          }
+        } else {
+          renderKey(key);
+        }
+        return;
+      }
+
+      const metaAll = obj._meta || {};
+      for (const g of GAUGES) {
+        if (Object.prototype.hasOwnProperty.call(metaAll, g.key)) {
+          mergeMetaAndUpdate(g.key, metaAll[g.key]);
+        }
+        if (Object.prototype.hasOwnProperty.call(obj, g.key)) {
+          const num = Number(obj[g.key]);
+          if (!Number.isNaN(num)) {
+            VALUE_RECEIVED[g.key] = true;
+
+            if (g.key === "speed") {
+              STATE[g.key] = num;
+              if (!isSweepLocked(g.key)) scheduleValueAnimation(g.key, num);
+            } else if (g.key === "speed_measure") {
+              handleSpeedMeasureApiValue(num, true);
+            } else {
+              STATE[g.key] = num;
+              if (!isSweepLocked(g.key)) scheduleValueAnimation(g.key, num);
+            }
+          }
+        }
+      }
+      GAUGES.forEach(g => { if (!ANIM[g.key]) renderKey(g.key); });
+    }
+
+        function mergeMetaAndUpdate(key, metaObj) {
+      if (metaObj == null) return;
+
+      let normalized;
+      if (typeof metaObj === "string") {
+        if (key === "speed") normalized = { current_unit: metaObj };
+        else if (UNIT_KIND[key] === "temp") normalized = { unit: metaObj };
+        else normalized = {};
+      } else if (typeof metaObj === "object" && !Array.isArray(metaObj)) {
+        normalized = metaObj;
+      } else {
+        normalized = {};
+      }
+
+      const prev = (META[key] && typeof META[key] === "object" && !Array.isArray(META[key])) ? META[key] : {};
+      META[key] = { ...prev, ...normalized };
+
+      updateGaugeLimitsFromMeta(key);
+
+      if (UNIT_KIND[key] === "temp") {
+        LAST_TEMP_UNIT[key] = META[key].unit || "°C";
+      } else if (UNIT_KIND[key] === "speed") {
+        const ru = META[key].current_unit || "km/h";
+        LAST_SPEED_UNIT[key] = (String(ru).toLowerCase() === "mph") ? "mph" : "km/h";
+      }
+    }
+
+    let ws;
+    let reconn;
+    let metaRequested = false;
+
+
+    function requestMetaNow() {
+      if (!ws || ws.readyState !== WebSocket.OPEN || metaRequested) return;
+      try {
+        ws.send(JSON.stringify({
+          type:  "request_meta",
+          page:  location.pathname || "",
+          href:  location.href || "",
+          title: document.title || ""
+        }));
+        metaRequested = true;
+      } catch {}
+    }
+
+    function requestMetaIfVisible() {
+      if (document.visibilityState === "visible") {
+        requestMetaNow();
+      }
+    }
+
+    function connectWS(){
+      try{
+        ws = new WebSocket(WS_URL);
+        metaRequested = false;
+
+        ws.onopen = () => {
+          clearTimeout(reconn);
+          requestMetaIfVisible();
+        };
+        ws.onclose  = () => { reconn = setTimeout(connectWS, 1000); };
+        ws.onerror  = () => { try{ws.close();}catch{} };
+        ws.onmessage= (ev) => {
+          try { handleMessage(JSON.parse(ev.data)); }
+          catch(e){ if (DEBUG) console.warn("Bad WS payload", e); }
+        };
+      }catch{
+        reconn = setTimeout(connectWS, 1000);
+      }
+    }
+
+    function deriveStyle(tilePx) {
+      const px = v => Math.max(6, Math.round(v));
+      return {
+        arcTrackWidthPx:   px(tilePx * STYLE_RATIOS.arcTrackW),
+        arcValueWidthPx:   px(tilePx * STYLE_RATIOS.arcValueW),
+        valueFontWeight:   800,
+        valueFontPx:       px(tilePx * STYLE_RATIOS.valueFont),
+        valueYOffsetPx:    Math.round(tilePx * STYLE_RATIOS.valueYOffset),
+        labelFontWeight:   600,
+        labelFontPx:       px(tilePx * STYLE_RATIOS.labelFont),
+        labelYOffsetPx:    Math.round(tilePx * STYLE_RATIOS.labelYOffset),
+        labelLineHeightPx: null,
+        minmaxFontWeight:  600,
+        minmaxFontPx:      px(tilePx * STYLE_RATIOS.minmaxFont),
+        minLabelFontPx:    null,
+        maxLabelFontPx:    null,
+        minLabelOffsetXPx: 0,
+        minLabelOffsetYPx: px(tilePx * 0.22),
+        maxLabelOffsetXPx: 0,
+        maxLabelOffsetYPx: px(tilePx * 0.22),
+        radiusFactor:      STYLE_RATIOS.radiusFactor,
+        minmaxRadius:      STYLE_RATIOS.minmaxRadius,
+        minmaxAngleInsetDeg: STYLE_RATIOS.minmaxAngleInsetDeg,
+      };
+    }
+
+    function effectiveDpr() {
+      const base = (window.devicePixelRatio || 1);
+      let eff = AA.enabled ? base * AA.scale : base;
+      if (PIXEL_SNAP.enabled) eff = Math.max(1, Math.round(eff));
+      return eff;
+    }
+
+    function sizeCanvasToActualRect(canvas) {
+      if (!canvas) return;
+      const effDpr = effectiveDpr();
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(1, Math.round(rect.width));
+      const cssH = Math.max(1, Math.round(rect.height));
+      canvas.width  = Math.round(cssW * effDpr);
+      canvas.height = Math.round(cssH * effDpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(effDpr, 0, 0, effDpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      try { ctx.imageSmoothingQuality = "high"; } catch {}
+      canvas.dataset.dpr = String(effDpr);
+    }
+
+    function applyPageGridLayout(pageIndex, pageCfg, tilePx) {
+      const gridEl = document.getElementById(`grid-${pageIndex}`);
+      if (!gridEl) return;
+      gridEl.style.gridTemplateColumns = `repeat(${pageCfg.cols}, ${tilePx}px)`;
+      gridEl.style.gridTemplateRows    = `repeat(${pageCfg.rows}, ${tilePx}px)`;
+
+      gridEl.querySelectorAll(".card").forEach(card => {
+        const canvas = card.querySelector("canvas");
+        card.style.width = `${tilePx}px`;
+        card.style.height = `${tilePx}px`;
+        if (canvas) {
+          canvas.style.width = `${tilePx}px`;
+          canvas.style.height = `${tilePx}px`;
+        }
+      });
+    }
+
+    function applyResponsiveSizing() {
+      document.body.classList.toggle("fullscreen-mode", !!FULLSCREEN_CARD);
+
+      const rootCss = getComputedStyle(document.documentElement);
+      const PAD  = parseFloat(rootCss.getPropertyValue("--grid-pad")) || 0;
+      const GAPX = parseFloat(rootCss.getPropertyValue("--grid-gap-x")) || 0;
+      const GAPY = parseFloat(rootCss.getPropertyValue("--grid-gap-y")) || 0;
+
+      document.querySelectorAll(".grid").forEach(gridEl => {
+        gridEl.style.padding   = `${PAD}px`;
+        gridEl.style.columnGap = `${GAPX}px`;
+        gridEl.style.rowGap    = `${GAPY}px`;
+        gridEl.style.justifyContent = "center";
+      });
+
+      const rect = pagesViewport.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width));
+      const h = Math.max(1, Math.floor(rect.height));
+
+      if (FULLSCREEN_CARD) {
+        fullscreenViewport.classList.add("active");
+        fullscreenViewport.setAttribute("aria-hidden", "false");
+
+        const tilePx = Math.max(
+          1,
+          Math.min(
+            w - 2 * PAD,
+            h - 2 * PAD - FULLSCREEN_TOP_PADDING_PX - FULLSCREEN_BOTTOM_PADDING_PX
+          )
+        );
+
+        CURRENT_TILE_PX = tilePx;
+        CUR_STYLE = deriveStyle(CURRENT_TILE_PX);
+
+        document.querySelectorAll(".page").forEach(page => {
+          page.style.display = "block";
+        });
+
+        document.querySelectorAll(".grid").forEach(gridEl => {
+          gridEl.style.alignContent = "space-evenly";
+        });
+
+        document.querySelectorAll(".card").forEach(card => {
+          if (card.classList.contains("empty-slot")) {
+            card.style.display = "";
+            return;
+          }
+          card.classList.remove("fullscreen");
+          card.style.display = "";
+          card.setAttribute("aria-pressed", "false");
+        });
+
+        FULLSCREEN_CARD = getFullscreenCard() || FULLSCREEN_CARD;
+        FULLSCREEN_CARDS.forEach(card => {
+          card.style.width = `${tilePx}px`;
+          card.style.height = `${tilePx}px`;
+          const canvas = card.querySelector("canvas");
+          if (canvas) {
+            canvas.style.width = `${tilePx}px`;
+            canvas.style.height = `${tilePx}px`;
+          }
+        });
+
+        if (!FULLSCREEN_KEEP_TRACK_ANIMATION) {
+          updateFullscreenTrackTransform(false);
+        }
+      } else {
+        fullscreenViewport.classList.remove("active");
+        fullscreenViewport.setAttribute("aria-hidden", "true");
+        pagesTrack.style.transition = "transform 280ms cubic-bezier(.2,.8,.2,1)";
+        pagesTrack.style.transform = `translateX(-${PAGE_STATE.current * 100}%)`;
+
+        const rows = Math.max(1, Number(LAYOUT_CONFIG.rows) || 1);
+        const cols = Math.max(1, Number(LAYOUT_CONFIG.cols) || 1);
+        const innerW = w - 2*PAD - (cols - 1) * GAPX;
+        const innerH = h - 2*PAD - (rows - 1) * GAPY;
+        const tileW = Math.floor(innerW / cols);
+        const tileH = Math.floor(innerH / rows);
+        const tilePx = Math.max(1, Math.min(tileW, tileH));
+
+        CURRENT_TILE_PX = tilePx;
+        CUR_STYLE = deriveStyle(CURRENT_TILE_PX);
+
+        for (let pageIndex = 0; pageIndex < PAGE_STATE.count; pageIndex++) {
+          applyPageGridLayout(pageIndex, { rows, cols }, tilePx);
+        }
+
+        document.querySelectorAll(".page").forEach(page => {
+          page.style.display = "block";
+        });
+
+        document.querySelectorAll(".grid").forEach(gridEl => {
+          gridEl.style.alignContent = "space-evenly";
+        });
+
+        document.querySelectorAll(".card").forEach(card => {
+          if (card.classList.contains("empty-slot")) {
+            card.style.display = "";
+            return;
+          }
+          card.classList.remove("fullscreen");
+          card.style.display = "";
+          card.setAttribute("aria-pressed", "false");
+        });
+      }
+
+      requestAnimationFrame(() => {
+        document.querySelectorAll("canvas").forEach(c => {
+          if (c.offsetParent !== null) sizeCanvasToActualRect(c);
+        });
+        GAUGES.forEach(g => renderKey(g.key));
+        updatePageArrowVisibility();
+        updatePageIndicator();
+        updateSelectedTileVisual();
+      });
+    }
+
+    window.addEventListener("resize", applyResponsiveSizing);
+    new ResizeObserver(() => applyResponsiveSizing()).observe(document.getElementById("wrap"));
+    new ResizeObserver(() => applyResponsiveSizing()).observe(document.getElementById("pagesViewport"));
+
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const c = entry.target;
+        sizeCanvasToActualRect(c);
+        const key = c.dataset.key;
+        if (key) renderKey(key);
+      }
+    });
+
+    document.addEventListener("visibilitychange", handleDashboardVisibilityChange);
+
+    GAUGES.forEach(g => {
+      STATE[g.key] = 0;
+      DISPLAY[g.key] = 0;
+      VALUE_RECEIVED[g.key] = false;
+    });
+
+    buildPages();
+    applyResponsiveSizing();
+    connectWS();
+    scheduleVisibleNeedleSweep(220);
+  </script>
+</body>
+</html>

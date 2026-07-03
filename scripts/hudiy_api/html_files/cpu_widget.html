@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CAN Widgets – CPU Only</title>
+
+  <!-- wie im Referenz-Widget: Roboto lokal einbinden -->
+  <link rel="preload" href="Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <style>
+    @font-face {
+      font-family: 'Roboto';
+      src: url('Roboto-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root{
+      /* Farben kommen weiterhin über Hudiy-Hook, Defaults hier */
+      --label-color:#c8c8c8;
+      --value-color:#ffffff;
+
+      /* Größen jetzt relativ (wie im Code zum Abgucken) */
+      --row-gap: 1vh;
+      --container-pad: 1vw;
+
+      /* Typografie-Feintuning */
+      --label-weight: 700;  /* Referenz: Label fett */
+      --value-weight: 400;  /* Referenz: Value normal */
+      --unit-weight: 400;
+      --lineheight: 1.1;
+    }
+
+    html, body{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    body{
+      background:transparent;
+      color:var(--value-color);
+      font-family:'Roboto', system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+
+      /* zentrale Skalierung wie im Referenz-Widget */
+      font-size: calc(100vw / 14);
+
+      /* analoge Außenabstände */
+      padding: var(--container-pad);
+      display:flex;
+      flex-direction:column;
+
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision;
+    }
+
+    #container{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:flex-end;   /* deine rechte Ausrichtung bleibt erhalten */
+      text-align:right;
+      gap:var(--row-gap);
+      height:100%;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    .label{
+      font-size: 1.3em;                 /* skaliert über body font-size */
+      color: var(--label-color);
+      font-weight: var(--label-weight);
+      line-height: var(--lineheight);
+      /* optionale vertikale Abstände wie im Referenz-Widget */
+      margin-top: 2vh;
+      /* rechtsbündig statt left-margin */
+    }
+
+    .value{
+      font-size: 1.3em;                 /* skaliert über body font-size */
+      color: var(--value-color);
+      line-height: var(--lineheight);
+      display:flex;
+      justify-content:flex-end;
+      align-items:baseline;
+      gap: 0.25em;                    /* relativ zur Schriftgröße */
+      white-space:nowrap;
+      /* vertikale Abstände analog Referenz */
+      margin-top: 2vh;
+      margin-bottom: 4vh;
+    }
+
+    .value .num  { font-weight: var(--value-weight); }
+    .value .unit { font-weight: var(--unit-weight); }
+
+    /* falls du min/max später wieder einblendest – skaliert jetzt auch sauber */
+    .minmax{
+      font-size: 0.8em;
+      font-weight: 400;
+      color:#bdbdbd;
+      line-height:1.1;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div class="label" id="lbl-cpu_temp">CPU-Temperatur</div>
+    <div class="value">
+      <span id="v-cpu_temp" class="num">--</span><span id="u-cpu_temp" class="unit">°C</span>
+    </div>
+
+    <div class="label" id="lbl-cpu_load">CPU-Auslastung</div>
+    <div class="value">
+      <span id="v-cpu_load" class="num">--</span><span id="u-cpu_load" class="unit">%</span>
+    </div>
+
+    <div class="label" id="lbl-cpu_freq_mhz">CPU-Takt</div>
+    <div class="value">
+      <span id="v-cpu_freq_mhz" class="num">--</span><span id="u-cpu_freq_mhz" class="unit">MHz</span>
+    </div>
+  </div>
+
+  <script>
+    // ------- Translations -------
+    const ENABLE_TRANSLATION = true;
+    const TRANSLATION_LANG   = "en";
+
+    const TRANSLATIONS = {
+      en: { cpu_temp:"CPU Temp", cpu_load:"CPU Load", cpu_freq_mhz:"CPU Freq" },
+      de: { cpu_temp:"CPU-Temperatur", cpu_load:"CPU-Auslastung", cpu_freq_mhz:"CPU-Takt" }
+    };
+
+    const LABEL_MAP = {
+      "lbl-cpu_temp": "cpu_temp",
+      "lbl-cpu_load": "cpu_load",
+      "lbl-cpu_freq_mhz": "cpu_freq_mhz",
+    };
+
+    function applyLabels(){
+      if(!ENABLE_TRANSLATION) return;
+      const table = TRANSLATIONS[TRANSLATION_LANG] || {};
+      for (const elId in LABEL_MAP){
+        const key = LABEL_MAP[elId];
+        const el  = document.getElementById(elId);
+        if(el && table[key]) el.textContent = table[key];
+      }
+    }
+
+    // ------- Settings -------
+    const WS_URL = "ws://127.0.0.1:8765";
+    const DEBUG  = false;
+
+    // ------- Helpers -------
+    const ROUNDING = {
+      temp: {
+        C: { step: 1, mode: "nearest", enabled: false },
+        F: { step: 1, mode: "nearest", enabled: true  },
+      },
+      load: { step: 1, mode: "nearest", enabled: true  },
+      freq: { step: 1, mode: "nearest", enabled: false },
+    };
+
+    function roundToStep(val, step, mode="nearest"){
+      const x = val / step;
+      if (mode === "up")   return Math.ceil(x)  * step;
+      if (mode === "down") return Math.floor(x) * step;
+      return Math.round(x) * step;
+    }
+    const c2f = c => c * 9/5 + 32;
+    const f2c = f => (f - 32) * 5/9;
+
+    // ------- Hudiy Theme Hook -------
+    (function setupHudiyTheme() {
+      window.hudiy = window.hudiy || {};
+      const apply = () => {
+        const cs = hudiy.colorScheme || {};
+        document.documentElement.style.setProperty('--label-color', cs.onSurface || '#c8c8c8');
+        document.documentElement.style.setProperty('--value-color', cs.primary   || '#ffffff');
+      };
+      const prevAttach = hudiy.onAttached;
+      hudiy.onAttached = () => { try { prevAttach && prevAttach(); } catch {} apply(); };
+      hudiy.onColorSchemeChanged = apply;
+      apply();
+    })();
+
+    // ------- State -------
+    const META  = Object.create(null);
+    const VALUE = Object.create(null);
+    const KEYS  = ["cpu_temp","cpu_load","cpu_freq_mhz"];
+    const LAST_TEMP_UNIT = { cpu_temp: null };
+
+    const setText = (id, txt) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = txt;
+    };
+
+    function tempDisplayValue(raw, m){
+      const outUnit = m.unit || "°C";
+      const inUnit  = m.input_unit || outUnit;
+      let v = Number(raw);
+
+      if (inUnit === "°C" && outUnit === "°F") v = c2f(v);
+      else if (inUnit === "°F" && outUnit === "°C") v = f2c(v);
+
+      const cfg = (outUnit === "°F") ? ROUNDING.temp.F : ROUNDING.temp.C;
+      return { value: cfg.enabled ? roundToStep(v, cfg.step, cfg.mode) : v, unit: outUnit };
+    }
+
+    function renderKey(key){
+      if (!KEYS.includes(key)) return;
+      const m = META[key] || {};
+      const val = VALUE[key];
+      if (val == null || Number.isNaN(val)) return;
+
+      if (key === "cpu_temp"){
+        const { value: shown, unit } = tempDisplayValue(val, m);
+        setText("v-cpu_temp", String(Math.round(shown)));
+        setText("u-cpu_temp", unit);
+
+        if (LAST_TEMP_UNIT[key] !== null && LAST_TEMP_UNIT[key] !== unit){
+          if (DEBUG) console.log(`[${key}] unit changed: ${LAST_TEMP_UNIT[key]} -> ${unit}`);
+          applyLabels();
+        }
+        LAST_TEMP_UNIT[key] = unit;
+        return;
+      }
+
+      if (key === "cpu_load"){
+        const unit = (META[key]?.unit) || "%";
+        const shown = ROUNDING.load.enabled ? roundToStep(val, ROUNDING.load.step, ROUNDING.load.mode) : val;
+        setText("v-cpu_load", String(Math.round(shown)));
+        setText("u-cpu_load", unit);
+        return;
+      }
+
+      if (key === "cpu_freq_mhz"){
+        const unit = (META[key]?.unit) || "MHz";
+        const shown = ROUNDING.freq.enabled ? roundToStep(val, ROUNDING.freq.step, ROUNDING.freq.mode) : val;
+        setText("v-cpu_freq_mhz", String(Math.round(shown)));
+        setText("u-cpu_freq_mhz", unit);
+        return;
+      }
+    }
+
+    function renderAll(){ KEYS.forEach(renderKey); }
+
+    // ------- Meta-Normalisierung -------
+    function normalizeMeta(key, metaObj){
+      if (metaObj == null) return {};
+      if (typeof metaObj === "string"){
+        if (key === "cpu_temp") return { unit: metaObj };
+        return {};
+      }
+      if (typeof metaObj === "object" && !Array.isArray(metaObj)) return metaObj;
+      return {};
+    }
+
+    // ------- WebSocket + Meta-Request -------
+    let ws, reconn;
+    let metaRequested = false;
+
+    function requestMetaNow(){
+      if (!ws || ws.readyState !== WebSocket.OPEN || metaRequested) return;
+      try{
+        ws.send(JSON.stringify({
+          type:  "request_meta",
+          page:  location.pathname || "",
+          href:  location.href || "",
+          title: document.title || ""
+        }));
+        metaRequested = true;
+        if (DEBUG) console.log("[WS] requested meta (visible page).");
+      }catch{}
+    }
+
+    function requestMetaIfVisible(){
+      if (document.visibilityState === "visible"){
+        requestMetaNow();
+      } else if (DEBUG){
+        console.log("[WS] page hidden; deferring meta request.");
+      }
+    }
+
+    function handleMessage(obj){
+      if (obj && typeof obj === "object" && "key" in obj){
+        const k = obj.key;
+        if (!KEYS.includes(k)) return;
+
+        if (obj.meta !== undefined){
+          const nm = normalizeMeta(k, obj.meta);
+          META[k] = { ...(META[k] || {}), ...nm };
+        }
+        if (obj.value !== undefined) VALUE[k] = Number(obj.value);
+
+        renderKey(k);
+        return;
+      }
+
+      if (obj && typeof obj === "object"){
+        const metaAll = obj._meta || {};
+        for (const k of KEYS){
+          if (Object.prototype.hasOwnProperty.call(metaAll, k)){
+            const nm = normalizeMeta(k, metaAll[k]);
+            META[k] = { ...(META[k] || {}), ...nm };
+          }
+          if (Object.prototype.hasOwnProperty.call(obj, k)){
+            VALUE[k] = Number(obj[k]);
+          }
+        }
+        renderAll();
+      }
+    }
+
+    function connectWS(){
+      try{
+        ws = new WebSocket(WS_URL);
+        metaRequested = false;
+        ws.onopen = () => {
+          if (DEBUG) console.log("WS connected");
+          clearTimeout(reconn);
+          requestMetaIfVisible();
+        };
+        ws.onclose   = () => { reconn = setTimeout(connectWS, 1000); };
+        ws.onerror   = () => { try{ ws.close(); } catch{} };
+        ws.onmessage = (ev) => {
+          try { handleMessage(JSON.parse(ev.data)); }
+          catch(e){ if (DEBUG) console.warn("Bad WS payload", e); }
+        };
+      }catch{
+        reconn = setTimeout(connectWS, 1000);
+      }
+    }
+
+    // Init
+    applyLabels();
+    document.addEventListener("visibilitychange", requestMetaIfVisible);
+    connectWS();
+  </script>
+</body>
+</html>

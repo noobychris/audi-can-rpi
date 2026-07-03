@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Volume Tile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<style>
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 36px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.material-symbols-outlined.animate {
+  border-color: var(--btn-outline, #fff);
+  box-shadow: 0 0 8px var(--btn-outline, #fff);
+}
+
+:root{
+  --tile-radius: 14px;
+  --tile-pad-x: 4px;
+  --tile-pad-y: 4px;
+  --tile-font: 24px;
+
+  --tile-bg: #3b6cb5;
+  --tile-fg: #ffffff;
+  --btn-outline: #fff;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  user-select: none;
+  color: var(--tile-fg);
+  font-family: "Roboto", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+}
+
+.tile {
+  display: inline-flex;
+  align-items: center;
+  gap: .2em;
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--tile-pad-y) var(--tile-pad-x);
+  border-radius: var(--tile-radius);
+  background: var(--tile-bg);
+  color: var(--tile-fg);
+  white-space: nowrap;
+  font-size: var(--tile-font);
+}
+
+#volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 170px;
+  height: 8px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.3);
+  outline: none;
+  transition: all 0.3s ease;
+  visibility: hidden;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tile-fg);
+  cursor: pointer;
+}
+
+#volumeSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--tile-fg);
+  cursor: pointer;
+}
+
+.val {
+  font-weight: 700;
+  min-width: 55px;
+  text-align: right;
+  display: inline-block;
+}
+</style>
+</head>
+
+<body>
+<div class="tile">
+  <span id="vol-down" class="material-symbols-outlined">volume_down</span>
+  <input id="volumeSlider" type="range" min="0" max="100" step="5" value="50">
+  <span id="vol-up" class="material-symbols-outlined">volume_up</span>
+  <span id="vol-val" class="val">50%</span>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const ENABLE_VOLUME_POLLING = false;   // ← toggle this
+const POLL_INTERVAL_MS = 750;
+/* ================================================== */
+
+const slider = document.getElementById("volumeSlider");
+const display = document.getElementById("vol-val");
+const btnDown = document.getElementById("vol-down");
+const btnUp = document.getElementById("vol-up");
+
+const showPercentage = false;
+if (!showPercentage) display.style.display = "none";
+
+function roundToStep(v){ return Math.round(v / 5) * 5; }
+
+function animateBtn(btn) {
+  btn.classList.add("animate");
+  setTimeout(() => btn.classList.remove("animate"), 150);
+}
+
+let isDragging = false;
+let lastBackendLevel = null;
+let pollTimer = null;
+
+function applyLevelToUI(lvl) {
+  lvl = Math.max(0, Math.min(100, roundToStep(lvl)));
+  slider.value = lvl;
+  if (showPercentage) display.textContent = lvl + "%";
+}
+
+async function fetchVolumeAndUpdate({force=false} = {}) {
+  try {
+    const r = await fetch("/get_volume", { cache: "no-store" });
+    const data = await r.json();
+    if (data.level === undefined) return;
+
+    const backendLevel = roundToStep(parseInt(data.level, 10));
+    if (Number.isNaN(backendLevel)) return;
+
+    if (lastBackendLevel === null) {
+      slider.style.visibility = "visible";
+      applyLevelToUI(backendLevel);
+      lastBackendLevel = backendLevel;
+      return;
+    }
+
+    if ((force || backendLevel !== lastBackendLevel) && !isDragging) {
+      applyLevelToUI(backendLevel);
+      lastBackendLevel = backendLevel;
+    }
+  } catch {}
+}
+
+function setVolume(lvl) {
+  lvl = Math.max(0, Math.min(100, roundToStep(lvl)));
+  applyLevelToUI(lvl);
+
+  fetch(`/set_volume?level=${lvl}`, { cache: "no-store" })
+    .then(() => {
+      if (ENABLE_VOLUME_POLLING) {
+        setTimeout(() => fetchVolumeAndUpdate({force:true}), 150);
+      }
+    })
+    .catch(err => console.error("Set volume failed:", err));
+}
+
+slider.addEventListener("pointerdown", () => { isDragging = true; });
+slider.addEventListener("pointerup", () => { isDragging = false; fetchVolumeAndUpdate({force:true}); });
+slider.addEventListener("pointercancel", () => { isDragging = false; });
+
+slider.addEventListener("change", () => setVolume(slider.value));
+
+btnDown.addEventListener("click", () => { animateBtn(btnDown); setVolume(parseInt(slider.value,10)-10); });
+btnUp.addEventListener("click", () => { animateBtn(btnUp); setVolume(parseInt(slider.value,10)+10); });
+
+// Initial read
+fetchVolumeAndUpdate({force:true});
+
+// Start polling only if enabled
+if (ENABLE_VOLUME_POLLING) {
+  pollTimer = setInterval(fetchVolumeAndUpdate, POLL_INTERVAL_MS);
+}
+
+// HUDIY Theme
+(function setupHudiyTheme(){
+  window.hudiy = window.hudiy || {};
+  function applyTheme(){
+    const cs = hudiy.colorScheme || {};
+    if(cs.primaryContainer)   document.documentElement.style.setProperty("--tile-bg", cs.primaryContainer);
+    if(cs.onPrimaryContainer) document.documentElement.style.setProperty("--tile-fg", cs.onPrimaryContainer);
+    if(cs.outline)            document.documentElement.style.setProperty("--btn-outline", cs.outline);
+  }
+  const prevAttach = hudiy.onAttached;
+  hudiy.onAttached = function(){ try{ prevAttach && prevAttach(); }catch{} applyTheme(); };
+  hudiy.onColorSchemeChanged = applyTheme;
+  applyTheme();
+})();
+</script>
+
+</body>
+</html>

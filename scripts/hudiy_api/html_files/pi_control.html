@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pi Control</title>
+<style>
+  :root {
+    --btn-bg: #444;       /* Fallback Hintergrund */
+    --btn-text: #fff;     /* Fallback Text */
+    --btn-outline: #0f0;  /* Fallback Fokus/Umrandung */
+  }
+
+  body {
+    background: transparent;
+    font-family: "Roboto", sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    gap: 2rem;
+  }
+
+  button {
+    width: 50vw;
+    max-width: 400px;
+    padding: 1rem 2rem;
+    font-size: 1.4rem;
+    color: var(--btn-text);
+    background-color: var(--btn-bg);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: 3px solid transparent;          /* transparent initial */
+    transition: outline-color 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease;
+  }
+
+  button.selected {
+    outline-color: var(--btn-outline);       /* nur Farbe ändern */
+    box-shadow: 0 0 10px var(--btn-outline);
+    filter: brightness(1.1);
+  }
+
+  #debug {
+    margin-top: 2rem;
+    width: 90%;
+    max-width: 600px;
+    height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+    background: rgba(0,0,0,0.7);
+    color: #0f0;
+    padding: 1rem;
+    border-radius: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<button id="close_hudiy">Exit</button>
+<button id="reboot">Reboot</button>
+<button id="shutdown">Shutdown</button>
+
+<div id="debug"></div>
+
+<script>
+  // -------- CONFIG --------
+  const DEBUG = false;
+  document.getElementById("debug").style.display = DEBUG ? "block" : "none";
+
+  const debugEl = document.getElementById("debug");
+  function log(msg) {
+    if(!DEBUG) return;
+    const time = new Date().toLocaleTimeString();
+    debugEl.textContent += `[${time}] ${msg}\n`;
+    debugEl.scrollTop = debugEl.scrollHeight;
+  }
+
+  const baseUrl = "http://127.0.0.1:44408";
+  const buttons = [
+    document.getElementById('close_hudiy'),
+	document.getElementById('reboot'),
+    document.getElementById('shutdown'),
+    
+  ];
+
+  buttons[0].onclick = () => sendCommand("close_hudiy");
+  buttons[1].onclick = () => sendCommand("reboot");
+  buttons[2].onclick = () => sendCommand("shutdown");
+
+  function sendCommand(cmd) {
+    const url = `${baseUrl}/${cmd}`;
+    log(`→ fetch ${url}`);
+    fetch(url)
+      .then(res => res.text().then(txt => log(`Response: ${res.status} ${res.statusText}, Body: ${txt}`)))
+      .catch(err => log(`Error: ${err}`));
+  }
+
+  let highlightedIndex = 0;
+  function updateFocus() {
+    buttons.forEach((btn, i) => btn.classList.toggle("selected", i === highlightedIndex));
+    log(`Focused button: ${buttons[highlightedIndex].id}`);
+  }
+
+  // -------- Hudiy Theme & Farben --------
+  (function applyHudiyTheme() {
+    window.hudiy = window.hudiy || {};
+
+    function updateColors() {
+      const cs = hudiy.colorScheme || {};
+      document.documentElement.style.setProperty('--btn-bg', cs.primaryContainer || '#444');
+      document.documentElement.style.setProperty('--btn-text', cs.onPrimaryContainer || '#fff');
+      document.documentElement.style.setProperty('--btn-outline', cs.outline || '#0f0');
+      log(`Theme updated: bg=${cs.primaryContainer}, text=${cs.onPrimaryContainer}, outline=${cs.outline}`);
+    }
+
+    const prevAttach = hudiy.onAttached;
+    hudiy.onAttached = function() {
+      prevAttach && prevAttach();
+      updateColors();
+      highlightedIndex = 0;
+      updateFocus();
+      log("Webview attached – Exit button selected");
+    };
+
+    hudiy.onColorSchemeChanged = updateColors;
+    updateColors(); // falls colorScheme schon verfügbar
+  })();
+
+  // -------- Hudiy Key Events --------
+  hudiy.onActivatedChanged = function() {
+    log("Hudiy activated changed: " + hudiy.activated);
+  };
+
+  hudiy.onInputFocusChanged = function() {
+    log("Hudiy input focus changed: " + hudiy.inputFocus);
+  };
+
+  hudiy.onMoveToNextControl = function() {
+    if (!hudiy.inputFocus || !hudiy.activated) return true;
+    if (highlightedIndex < buttons.length - 1) ++highlightedIndex;
+    else highlightedIndex = 0; // zyklisch
+    updateFocus();
+    return true;
+  };
+
+  hudiy.onMoveToPreviousControl = function() {
+    if (!hudiy.inputFocus || !hudiy.activated) return true;
+    if (highlightedIndex > 0) --highlightedIndex;
+    else highlightedIndex = buttons.length - 1; // zyklisch
+    updateFocus();
+    return true;
+  };
+
+  hudiy.onTriggered = function() {
+    buttons[highlightedIndex].click();
+    return true;
+  };
+</script>
+
+</body>
+</html>
