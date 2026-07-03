@@ -17,6 +17,6 @@ The `tools` directory contains an optional graphical CAN debugging utility:
 
 The script uses `fis.png` and `rns-e.png` from the same directory. It is not required for normal operation.
 
-![Debugging script](docs/screenshots/debugging_script.png)
+![Debugging script](/docs/screenshots/debugging_script.png)
 
 ---
