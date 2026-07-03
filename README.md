@@ -7,7 +7,7 @@ This project displays CAN bus data such as speed and RPM in the vehicle's DIS/FI
 > 
 > This script is the result of years of work and runs very well in my own setup. However, I can only test it in my own car. In theory, it should work with other models as well. For this reason, I have created a table of compatible and tested models. Feedback after testing is highly appreciated so we can keep this table updated!
 
-I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It controls **Hudiy/OpenAuto Pro**. The Hudiy/OpenAuto Pro features in the script can be disabled, so the script will also run without it.
+I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Audi A4 B6 (8E)**. It integrates with **Hudiy and OpenAuto Pro**. The Hudiy and OpenAuto Pro integrations can be disabled, so the script can also run without either platform.
 
 ---
 
@@ -33,7 +33,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 - **Auto-Setup** – Installs all required packages on first start (incl. PiCan2/PiCan3).
 - **Feature Control** – Enable/disable all features individually.
-- **RNS-E Button Control** ([read_from_canbus_keymap.pdf](read_from_canbus_keymap.pdf))
+- **RNS-E Button Control** ([keymap PDF](docs/read_from_canbus%20keymap.pdf))
   - Long press **UP/DOWN**: Cycle displayed FIS/DIS values
   - Very long press **RETURN**: Start/stop `candump`
   - Extreme long press **SETUP** (~5s): Shutdown Raspberry Pi
@@ -67,7 +67,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Change the Hudiy day/night theme based on the vehicle lighting
 - Send CAN bus data to Hudiy applications, including gauges, widgets, volume control, reverse camera pages and Raspberry Pi controls
 
-<img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/01535419-f95a-4656-b91c-9c4fa2c4af94" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/4f004626-ab8b-4a4a-9990-ed9ffc31d536" />
+<img width="400" height="240" alt="Hudiy dashboard" src="docs/screenshots/hudiy_dashboard.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Hudiy gauges" src="docs/screenshots/hudiy_gauges.png" />
 
 ---
 
@@ -77,7 +77,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Change day/night mode based on car lighting  
 - Send CAN Bus data to the OpenAuto Pro API for dashboard display  
 
-<img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/01535419-f95a-4656-b91c-9c4fa2c4af94" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Image" src="https://github.com/user-attachments/assets/4f004626-ab8b-4a4a-9990-ed9ffc31d536" />
+<img width="400" height="240" alt="OpenAuto Pro simple dashboard" src="docs/screenshots/oap_simple.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="OpenAuto Pro gauges" src="docs/screenshots/oap_gauges.png" />
 
 ---
 
@@ -125,15 +125,11 @@ The generated `features.conf` file must later be copied into the same directory 
 
 ### Copy the repository files
 
-Copy the repository contents into:
+Copy the repository contents to `/home/pi/` so that the included `scripts` directory is located at:
 
 ```text
-/home/pi/
+/home/pi/scripts/
 ```
-
----
-
-### Hudiy warning
 
 > [!WARNING]
 > The included `.hudiy` folder contains the gauges and additional HTML page integrations, but it also replaces the existing Hudiy main menu.
@@ -144,89 +140,56 @@ Copy the repository contents into:
 > cp -a /home/pi/.hudiy /home/pi/.hudiy-backup
 > ```
 >
-> If you already use a customized Hudiy menu, do not overwrite the complete `.hudiy` directory without checking its contents first.
->
-> In that case, manually merge the required gauge and menu files into your existing `.hudiy` configuration.
+> If you already use a customized Hudiy menu, do not overwrite the complete `.hudiy` directory without checking its contents first. Merge the required files manually instead.
 
-
----
-
-The expected directory structure is:
+The relevant part of the resulting directory structure should look like this:
 
 ```text
 /home/pi/
 ├── .hudiy/
-└── scripts/
-    ├── features.conf
-    ├── pi_control.py
-    ├── read_from_canbus.py
-    ├── setup.html
-    └── hudiy_api/
-        └── html_files/
-            ├── analog_clock.html
-            ├── camera_web.html
-            ├── camera_web_with_lines.html
-            ├── can_widget_outside.html
-            ├── cpu_widget.html
-            ├── gauges.html
-            ├── pi_control.html
-            ├── volume_control.html
-            └── lines.png
+│   └── share/
+│       └── config/
+├── .openauto/
+│   ├── backgrounds/
+│   └── config/
+├── docs/
+│   ├── read_from_canbus keymap.pdf
+│   └── screenshots/
+├── scripts/
+│   ├── features.conf
+│   ├── pi_control.py
+│   ├── read_from_canbus.py
+│   ├── setup.html
+│   └── hudiy_api/
+│       └── html_files/
+│           ├── analog_clock.html
+│           ├── camera_web.html
+│           ├── camera_web_with_lines.html
+│           ├── can_widget_outside.html
+│           ├── cpu_widget.html
+│           ├── gauges.html
+│           ├── lines.png
+│           ├── pi_control.html
+│           └── volume_control.html
+└── tools/
+    ├── debugging_script.py
+    ├── fis.png
+    └── rns-e.png
 ```
 
-`/home/pi/scripts/` is the central working directory for:
+`/home/pi/scripts/` is the central working directory for the main scripts, the generated configuration and the Hudiy web files.
 
-- `read_from_canbus.py`
-- `pi_control.py`
-- `features.conf`
-- `setup.html`
-- the `hudiy_api` directory
-- all Flask and Hudiy-related files
-
-Make sure that `features.conf` is located directly next to `read_from_canbus.py`:
+Make sure that the generated `features.conf` is placed directly next to `read_from_canbus.py`:
 
 ```text
 /home/pi/scripts/features.conf
 /home/pi/scripts/read_from_canbus.py
 ```
 
----
-
-### Flask and Hudiy pages
-
-`pi_control.py` starts the Flask web server used to provide gauges, controls and additional HTML pages inside Hudiy.
-
-The HTML files are located in:
-
-```text
-/home/pi/scripts/hudiy_api/html_files/
-```
-
-This directory contains:
-
-| File | Function |
-|---|---|
-| `analog_clock.html` | Analog clock with date and digital time |
-| `camera_web.html` | Reverse camera view without guidelines |
-| `camera_web_with_lines.html` | Reverse camera view with guideline overlay |
-| `can_widget_outside.html` | Hudiy tile for the outside temperature |
-| `cpu_widget.html` | Widget for CPU temperature, CPU load and CPU frequency |
-| `gauges.html` | Main CAN bus gauge dashboard |
-| `pi_control.html` | Hudiy controls for exiting Hudiy, rebooting and shutting down the Raspberry Pi |
-| `volume_control.html` | Hudiy volume control tile |
-| `lines.png` | Guideline overlay used by `camera_web_with_lines.html` |
-
-The HTML files and `lines.png` should remain inside this directory because the Flask routes and HTML pages use relative file paths.
-
-Do not move individual files to another directory unless the corresponding paths in `pi_control.py` and the HTML files are adjusted as well.
-
-> **Note**
->
-> `pi_control.py` is the Python script that starts the Flask server.
->
-> `hudiy_api/html_files/pi_control.html` is the visible control page shown inside Hudiy.
+The `.openauto` directory is only required for the optional OpenAuto Pro integration. The `tools` directory contains the optional CAN debugging GUI and its required images.
 
 ---
+
 
 ### First manual start with internet access
 
@@ -300,6 +263,43 @@ Both scripts are started using the Python virtual environment located at:
 ```
 
 ---
+
+### Flask and Hudiy pages
+
+`pi_control.py` starts the Flask web server used to provide gauges, controls and additional HTML pages inside Hudiy.
+
+The HTML files are located in:
+
+```text
+/home/pi/scripts/hudiy_api/html_files/
+```
+
+This directory contains:
+
+| File | Function |
+|---|---|
+| `analog_clock.html` | Analog clock with date and digital time |
+| `camera_web.html` | Reverse camera view without guidelines |
+| `camera_web_with_lines.html` | Reverse camera view with guideline overlay |
+| `can_widget_outside.html` | Hudiy tile for the outside temperature |
+| `cpu_widget.html` | Widget for CPU temperature, CPU load and CPU frequency |
+| `gauges.html` | Main CAN bus gauge dashboard |
+| `pi_control.html` | Hudiy controls for exiting Hudiy, rebooting and shutting down the Raspberry Pi |
+| `volume_control.html` | Hudiy volume control tile |
+| `lines.png` | Guideline overlay used by `camera_web_with_lines.html` |
+
+The HTML files and `lines.png` should remain inside this directory because the Flask routes and HTML pages use relative file paths.
+
+Do not move individual files to another directory unless the corresponding paths in `pi_control.py` and the HTML files are adjusted as well.
+
+> **Note**
+>
+> `pi_control.py` is the Python script that starts the Flask server.
+>
+> `hudiy_api/html_files/pi_control.html` is the visible control page shown inside Hudiy.
+
+---
+
 
 ## 📨 Feedback & Support
 
