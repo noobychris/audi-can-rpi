@@ -11,17 +11,30 @@ I use this script with a **Raspberry Pi 4** connected to an **RNS-E** in an **Au
 
 ---
 
+## Tested Software Environments
+
+The project has been tested successfully with the following software combinations:
+
+| Raspberry Pi OS | Integration | Version | Python | Status |
+|---|---|---:|---:|---|
+| Trixie | Hudiy | 2.16 | 3.13.5 | ✅ Tested |
+| Bookworm | Hudiy | 1.20 | 3.11.2 | ✅ Tested |
+| Buster | OpenAuto Pro | 16.1 | 3.7.3 | ✅ Tested |
+
+
+---
+
 ## Main Features
 
 
 ### 1. Driver Information System (DIS/FIS) Text Output
 The script can write to the first two lines of the **DIS/FIS** (Driver Information System) in the instrument cluster. It can overwrite existing texts (e.g., from the radio or IMA modules) via the telephone channel.
 
-![Image](https://github.com/user-attachments/assets/f16e3018-3c32-4819-99f9-9a51ef2f099c) &nbsp;&nbsp;&nbsp; ![Image](https://github.com/user-attachments/assets/abfc84b0-341d-49f7-b662-1df58eaa0d3d)
+<img width="400" height="300" alt="Hudiy dashboard" src="docs/screenshots/fis_speed_rpm.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="300" alt="Hudiy gauges" src="docs/screenshots/fis_title_interpret.png" />
 
 | **CAN Bus Data (Infotainment Bus)** | **Hudiy / OpenAuto Pro Media Info** |
 |-------------------------------------|-----------------------------|
-| - Speed<br>- RPM<br>- Coolant temperature (A4 8E only)<br>- Outside temperature<br>- CPU usage & temperature<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration <br> <br> <br> |
+| - Speed<br>- RPM<br>- Coolant temperature<br>- Outside temperature (A4 8E only)<br>- CPU usage & temperature<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration <br> <br> <br> |
 
 
 **Alternative mode:**  
@@ -99,13 +112,6 @@ Note: The vehicles listed above should be compatible based on CAN dump analysis 
 
 ---
 
-## Software/OS Compatibility
-
-| Hudiy | OpenAuto Pro | Raspberry Pi OS Buster | Raspberry Pi OS Bookworm | Raspberry Pi OS Trixie |
-|-------|--------------|------------------------|--------------------------|------------------------|
-|   ✅   |   ✅   |   ✅   |   ✅   |   ✅   |
-
----
 
 ## Installation and Setup
 
