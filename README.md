@@ -31,7 +31,7 @@ Other combinations may also work, but have not been tested yet.
 ### 1. Driver Information System (DIS/FIS) Text Output
 The script can write to the first two lines of the **DIS/FIS** (Driver Information System) in the instrument cluster. It can overwrite existing texts (e.g., from the radio or IMA modules) via the telephone channel.
 
-<img width="400" height="300" alt="Hudiy dashboard" src="docs/screenshots/fis_speed_rpm.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="300" alt="Hudiy gauges" src="docs/screenshots/fis_title_interpret.png" />
+<img width="400" height="300" alt="Speed and RPM displayed in the FIS/DIS" src="docs/screenshots/fis_speed_rpm.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="300" alt="Media title and artist displayed in the FIS/DIS" src="docs/screenshots/fis_title_interpret.png" />
 
 | **CAN Bus Data (Infotainment Bus)** | **Hudiy / OpenAuto Pro Media Info** | **Raspberry Pi System Data** |
 |-------------------------------------|--------------------------------------|-------------------------------|
@@ -90,9 +90,9 @@ It can also display only a single value in the FIS/DIS with a custom title.
 > [!NOTE]
 > OpenAuto Pro has been discontinued. This integration is retained for existing installations.
 
-- Display media information in FIS/DIS  
-- Change day/night mode based on car lighting  
-- Send CAN Bus data to the OpenAuto Pro API for dashboard display  
+- Display media information in the FIS/DIS
+- Change the OpenAuto Pro day/night theme based on the vehicle lighting
+- Send CAN bus and system data to the OpenAuto Pro API for dashboard display
 
 <img width="400" height="240" alt="OpenAuto Pro simple dashboard" src="docs/screenshots/oap_simple.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="OpenAuto Pro gauges" src="docs/screenshots/oap_gauges.png" />
 
@@ -179,7 +179,7 @@ The relevant part of the resulting directory structure should look like this:
 │           ├── cpu_widget.html
 │           ├── gauges.html
 │           ├── lines.png
-│           ├── pi_control.html
+│           └── pi_control.html
 └── tools/
     ├── debugging_script.py
     ├── fis.png
@@ -328,7 +328,7 @@ Your feedback helps improve this project!
 
 ---
 
-### My Setup
+## My Setup
 
 - Audi A4 B6 (8E) Avant 2001  
 - Seat Exeo RNS-E 3R0 035 192  
