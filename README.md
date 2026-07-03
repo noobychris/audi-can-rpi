@@ -21,6 +21,7 @@ The project has been tested successfully with the following software combination
 | Bookworm | Hudiy | 1.20 | 3.11.2 | ✅ Tested |
 | Buster | OpenAuto Pro | 16.1 | 3.7.3 | ✅ Tested |
 
+Other combinations may also work, but have not been tested yet.
 
 ---
 
@@ -32,9 +33,9 @@ The script can write to the first two lines of the **DIS/FIS** (Driver Informati
 
 <img width="400" height="300" alt="Hudiy dashboard" src="docs/screenshots/fis_speed_rpm.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="300" alt="Hudiy gauges" src="docs/screenshots/fis_title_interpret.png" />
 
-| **CAN Bus Data (Infotainment Bus)** | **Hudiy / OpenAuto Pro Media Info** |
-|-------------------------------------|-----------------------------|
-| - Speed<br>- RPM<br>- Coolant temperature<br>- Outside temperature (A4 8E only)<br>- CPU usage & temperature<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration <br> <br> <br> |
+| **CAN Bus Data (Infotainment Bus)** | **Hudiy / OpenAuto Pro Media Info** | **Raspberry Pi System Data** |
+|-------------------------------------|--------------------------------------|-------------------------------|
+| - Speed<br>- RPM<br>- Coolant temperature<br>- Outside temperature (A4 8E only)<br>- Custom speed measurement value<br>- Blank line (no content) | - Title<br>- Artist<br>- Album<br>- Song position<br>- Song duration | - CPU usage<br>- CPU temperature<br>- CPU frequency |
 
 
 **Alternative mode:**  
@@ -78,13 +79,16 @@ It can also display only a single value in the FIS/DIS with a custom title.
 
 - Display media information in the FIS/DIS
 - Change the Hudiy day/night theme based on the vehicle lighting
-- Send CAN bus data to Hudiy applications, including gauges, widgets, volume control, reverse camera pages and Raspberry Pi controls
+- Send CAN bus and system data to Hudiy applications, including gauges, widgets, reverse camera pages and Raspberry Pi controls
 
 <img width="400" height="240" alt="Hudiy dashboard" src="docs/screenshots/hudiy_dashboard.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Hudiy gauges" src="docs/screenshots/hudiy_gauges.png" />
 
 ---
 
 ### 4. OpenAuto Pro Features
+
+> [!NOTE]
+> OpenAuto Pro has been discontinued. This integration is retained for existing installations.
 
 - Display media information in FIS/DIS  
 - Change day/night mode based on car lighting  
@@ -176,7 +180,6 @@ The relevant part of the resulting directory structure should look like this:
 │           ├── gauges.html
 │           ├── lines.png
 │           ├── pi_control.html
-│           └── volume_control.html
 └── tools/
     ├── debugging_script.py
     ├── fis.png
@@ -201,7 +204,7 @@ The `.openauto` directory is only required for the optional OpenAuto Pro integra
 
 Before enabling automatic startup, start both scripts manually at least once while the Raspberry Pi has an active internet connection.
 
-This allows the scripts to install all required Python packages and system dependencies.
+This allows the scripts to create the required virtual environment and install missing Python packages and dependencies.
 
 First start `read_from_canbus.py`:
 
@@ -291,7 +294,6 @@ This directory contains:
 | `cpu_widget.html` | Widget for CPU temperature, CPU load and CPU frequency |
 | `gauges.html` | Main CAN bus gauge dashboard |
 | `pi_control.html` | Hudiy controls for exiting Hudiy, rebooting and shutting down the Raspberry Pi |
-| `volume_control.html` | Hudiy volume control tile |
 | `lines.png` | Guideline overlay used by `camera_web_with_lines.html` |
 
 The HTML files and `lines.png` should remain inside this directory because the Flask routes and HTML pages use relative file paths.
