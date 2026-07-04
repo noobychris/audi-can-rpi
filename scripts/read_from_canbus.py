@@ -3951,11 +3951,25 @@ def log_fis_send(arb_id, data_content):
 async def welcome_message():
     global script_started, pause_fis1, pause_fis2, welcome_active
 
-    logger.info("welcome_message sent")
-    logger.info("")
-
-    if not (send_on_canbus and can_functional) or script_started:
+    if script_started:
         return
+
+    # In receive-only mode no FIS welcome message can or should be sent.
+    # CAN callbacks must nevertheless be released immediately.
+    if not (send_on_canbus and can_functional):
+        script_started = True
+        welcome_active = False
+        pause_fis1 = False
+        pause_fis2 = False
+        if ENABLE_LOGGING:
+            logger.info(
+                "Welcome message skipped because CAN sending is disabled; "
+                "script callbacks are now active."
+            )
+        return
+
+    logger.info("Sending welcome message.")
+    logger.info("")
 
     pause_fis1 = True
     pause_fis2 = True
@@ -3975,10 +3989,9 @@ async def welcome_message():
             await toggle_fis2_label()
             set_fis1(value_of_toggle_fis2, "center")
 
-        script_started = True
-
     finally:
-        # Zuerst die Sperren aufheben.
+        # A failed or skipped display operation must never keep all CAN callbacks blocked.
+        script_started = True
         welcome_active = False
         pause_fis1 = False
         pause_fis2 = False
@@ -7549,15 +7562,17 @@ def translate_caryear(carmodelyear):
 
 
 @handle_errors
-async def inject_65f_for_vcan():
-    if can_interface != "vcan0":
-        return
+async def inject_65f_for_desk_setup():
     if not AUTOSEND_CAR_MODEL:
         return
     if model_info_set:
         return
 
-    logger.info("ℹ️ vcan0 active -> injecting default 65F frames.")
+    logger.info(
+        "Desk setup active on %s -> injecting default 65F model data internally.",
+        can_interface
+    )
+
     await process_canid_65F("0035C837E2574155")
     await process_canid_65F("015A5A5A38453032")
     await process_canid_65F("0241313238383831")
@@ -7919,17 +7934,33 @@ async def main():
             cpu_task = track_task(read_cpu_loop(), "read_cpu_loop")
         #test the can-interface and see if can-messages are getting received
         await test_can_interface()
+
+        # Receive-only mode has no welcome-message phase. Release CAN callbacks
+        # immediately instead of waiting for model detection / a FIS transmission.
+        if can_functional and not send_on_canbus:
+            script_started = True
+            pause_fis1 = False
+            pause_fis2 = False
+            if ENABLE_LOGGING:
+                logger.info(
+                    "Receive-only CAN mode active: script_started=True; "
+                    "CAN callbacks are enabled without a welcome message."
+                )
+
         if bus and can_functional:
-            # CAN lesen ruhig schon starten
             track_task(get_can_messages(), "get_can_messages")
+
             if send_on_canbus:
                 if send_values_to_dashboard or send_api_mediadata_to_dashboard:
                     track_task(overwrite_dis(), "overwrite_dis")
-                if activate_rnse_tv_input and send_on_canbus:
+
+                if activate_rnse_tv_input:
                     send_tv_input()
+
                 track_task(fis1_sender(), "fis1_sender")
                 track_task(fis2_sender(), "fis2_sender")
-                await inject_65f_for_vcan()
+
+            await inject_65f_for_desk_setup()
         #check if OpenAuto Pro API files are already downloaded. If not, download, extract and import.
         await check_import_api()
         #check if the units (km/h / rpm and °C / °F) are set correctly in openauto_obd_gauges.ini for OAP Dashboard view.
