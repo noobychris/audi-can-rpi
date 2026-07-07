@@ -81,7 +81,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 - Change the Hudiy day/night theme based on the vehicle lighting
 - Send CAN bus and system data to Hudiy applications, including gauges, widgets, reverse camera pages and Raspberry Pi controls
 
-<img width="400" height="240" alt="Hudiy dashboard" src="docs/screenshots/hudiy_dashboard.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Hudiy gauges" src="docs/screenshots/hudiy_gauges.png" />
+<img width="400" height="240" alt="Hudiy dashboard " src="docs/screenshots/hudiy_dashboard.png" />  &nbsp;&nbsp;&nbsp; <img width="400" height="240" alt="Hudiy gauges" src="docs/screenshots/hudiy_gauges.png" />
 
 ---
 
