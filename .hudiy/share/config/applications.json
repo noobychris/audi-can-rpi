@@ -1,0 +1,45 @@
+{
+  "applications": [
+    {
+      "action": "OPEN_CAN_GAUGES",
+      "url": "http://127.0.0.1:44408/gauges.html",
+      "allowBackground": false,
+      "controlAudioFocus": false
+    },
+	{
+      "action": "start_emulationstation",
+      "url": "http://127.0.0.1:44408/start_emulationstation",
+      "allowBackground": false,
+      "controlAudioFocus": false
+    },
+	{
+	  "action": "gauges_app",
+	  "allowBackground": false
+	},
+	{
+	  "action": "camera_web",
+	  "url": "http://127.0.0.1:44408/revcam_toggle",
+	  "allowBackground": false,
+	  "controlAudioFocus": false
+	},
+	{
+      "action": "pi_control",
+      "url": "http://127.0.0.1:44408/pi_control.html",
+      "allowBackground": false,
+      "controlAudioFocus": false
+    },
+	{
+      "action": "shutdown_system",
+      "url": "http://127.0.0.1:44408/shutdown",
+      "allowBackground": false,
+      "controlAudioFocus": false
+    },
+    {
+      "action": "reboot_system",
+      "url": "http://127.0.0.1:44408/reboot",
+      "allowBackground": false,
+      "controlAudioFocus": false
+    }
+
+  ]
+}
