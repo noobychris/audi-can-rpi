@@ -1,0 +1,14 @@
+{
+  "dashboards": [
+    {
+      "isDefault": true,
+      "action": "hudiy_dashboard",
+      "widgets": [
+		{ "type": "web", 		 "size": "MEDIUM_NARROW", "url": "file:///home/pi/scripts/hudiy_api/html_files/analog_clock.html" },
+        { "type": "now_playing", "size": "large_narrow" },
+		{ "type": "phone",       "size": "small_narrow" },
+		{ "type": "web", 		 "size": "MEDIUM_NARROW", "url": "file:////home/pi/scripts/hudiy_api/html_files/cpu_widget.html" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+    "overlays" : [
+        {
+            "identifier" : "gauges",
+            "action" : "",
+            "width" : "100vw",
+            "height" : "100vh",
+            "x" : 0,
+            "y" : 0,
+            "visibility" : "NATIVE_UI_ONLY",
+            "url" : "http://127.0.0.1:44408/gauges.html",
+            "controlAudioFocus" : false,
+            "audioStreamCategory" : "NONE",
+            "visibleOnActions" : [
+                "gauges_app"
+            ],
+            "staticPosition" : true
+        },
+        {
+            "identifier" : "volume slider",
+            "action" : "",
+            "width" : "40vw",
+            "height" : "11.5vh",
+            "x" : "30vw",
+            "y" : "86.5vh",
+            "visibility" : "NATIVE_UI_ONLY",
+            "url" : "http://127.0.0.1:44408/volume_control.html",
+            "controlAudioFocus" : false,
+            "audioStreamCategory" : "NOTIFICATION",
+            "visibleOnActions" : [
+                "hudiy_dashboard",
+                "applications_menu",
+                "settings_menu",
+                "autobox_settings",
+                "theme_settings",
+                "backup_cam_settings",
+                "appearance_settings",
+                "application_settings",
+                "sound_settings",
+                "equalizer_settings",
+                "notification_settings",
+                "overlay_settings",
+                "equalizer_preset_settings",
+                "background_applications",
+                "storage_music_player",
+                "storage_music_browser",
+                "storage_music_playlist",
+                "fm_radio_player",
+                "a2dp_music_player",
+                "contacts",
+                "favorite_contacts",
+                "calls_history",
+                "dialpad",
+                "active_call",
+                "autobox_player",
+                "about_autobox_device",
+                "android_auto_player",
+                "pairing_menu",
+                "remove_paired_devices"
+            ],
+            "staticPosition" : true
+        },
+        {
+            "identifier" : "camera web + lines",
+            "action" : "",
+            "width" : "100vw",
+            "height" : "100vh",
+            "x" : 0,
+            "y" : 0,
+            "visibility" : "ALWAYS",
+            "url" : "http://127.0.0.1:44408/camera_web_with_lines.html",
+            "controlAudioFocus" : false,
+            "audioStreamCategory" : "NONE",
+            "visibleOnActions" : [
+                "camera_web_with_lines"
+            ],
+            "staticPosition" : true
+        },
+        {
+            "identifier" : "camera web",
+            "action" : "",
+            "width" : "100vw",
+            "height" : "100vh",
+            "x" : 0,
+            "y" : 0,
+            "visibility" : "ALWAYS",
+            "url" : "http://127.0.0.1:44408/camera_web.html",
+            "controlAudioFocus" : false,
+            "audioStreamCategory" : "NONE",
+            "visibleOnActions" : [
+                "camera_web"
+            ],
+            "staticPosition" : true
+        }
+    ],
+    "navigationOverlayPosition" : {
+        "x" : 0,
+        "y" : 0
+    },
+    "volumeOverlayPosition" : {
+        "x" : 0,
+        "y" : 0
+    },
+    "navigationOverlayVisibility" : "NONE",
+    "volumeOverlayVisibility" : "NONE",
+    "navigationOverlayOpacity" : 100,
+    "xStep" : 1,
+    "yStep" : 1
+}

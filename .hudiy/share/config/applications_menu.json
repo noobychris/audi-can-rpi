@@ -1,0 +1,103 @@
+{
+  "categories": [],
+  "items": [
+		{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "dashboard",
+		"action": "hudiy_dashboard",
+		"label": "Dashboard"
+    },
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "wifi",
+		"action": "connect_android_auto_wifi",
+		"label": "Android Auto"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "redo",
+		"action": "resume_android_auto_projection",
+		"label": "Android Auto"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "wifi",
+		"action": "connect_autobox_wifi",
+		"label": "Autobox"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "redo",
+		"action": "resume_autobox_projection",
+		"label": "Autobox"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "bluetooth_drive",
+		"action": "now_playing_go_to_player",
+		"label": "Music"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "speed",
+		"label": "Gauges",
+		"action": "gauges_app"
+    },
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "videocam",
+		"label": "Camera",
+		"action": "camera_web"
+    },
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "sports_esports",
+		"label": "Games",
+		"action": "start_emulationstation"
+    },
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "contacts",
+		"action": "favorite_contacts",
+		"label": "Favorites"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "settings",
+		"action": "settings_menu",
+		"label": "Settings"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "logout",
+		"action": "quit_hudiy",
+		"label": "Quit Hudiy"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "restart_alt",
+		"action": "reboot_system",
+		"label": "Reboot"
+	},
+	{
+		"categories": [],
+		"iconFontFamily": "Material Symbols Rounded",
+		"iconName": "settings_power",
+		"action": "shutdown_system",
+		"label": "Shutdown"
+	}
+  ]
+}
