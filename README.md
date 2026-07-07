@@ -175,7 +175,6 @@ The relevant part of the resulting directory structure should look like this:
 │           ├── analog_clock.html
 │           ├── camera_web.html
 │           ├── camera_web_with_lines.html
-│           ├── can_widget_outside.html
 │           ├── cpu_widget.html
 │           ├── gauges.html
 │           ├── lines.png
@@ -290,7 +289,6 @@ This directory contains:
 | `analog_clock.html` | Analog clock with date and digital time |
 | `camera_web.html` | Reverse camera view without guidelines |
 | `camera_web_with_lines.html` | Reverse camera view with guideline overlay |
-| `can_widget_outside.html` | Hudiy tile for the outside temperature |
 | `cpu_widget.html` | Widget for CPU temperature, CPU load and CPU frequency |
 | `gauges.html` | Main CAN bus gauge dashboard |
 | `pi_control.html` | Hudiy controls for exiting Hudiy, rebooting and shutting down the Raspberry Pi |
