@@ -335,3 +335,12 @@ Your feedback helps improve this project!
 - CarlinKit 2022 CPC200-AutoKit (Apple CarPlay)  
 - [My VGA Sync Combiner for Audi RNS-E – soldering required](https://github.com/noobychris/vga-sync-combiner-audi-rnse)
 - [Hama Video Adapter HDMI™ Plug to VGA Socket (00200344)](https://nordics.hama.com/00200344/hama-video-adapter-hdmi-plug-vga-socket-full-hd-1080p)
+
+## License
+
+This project is licensed under the MIT License.
+
+You are free to use, copy, modify, distribute, and sell this software,
+provided that the original copyright notice and license text are retained.
+
+See the [LICENSE](LICENSE) file for the full license text.
