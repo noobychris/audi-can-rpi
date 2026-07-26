@@ -104,7 +104,7 @@ It can also display only a single value in the FIS/DIS with a custom title.
 |--------------|----------------|------|--------------|------|
 | Audi A4 8E   | ✅              | ⚠️    | ✅           |      |
 | Audi A3 8L   | ⚠️              | ⚠️    | ⚠️           |      |
-| Audi A3 8P   | ⚠️              | ⚠️    | ⚠️           |      |
+| Audi A3 8P   | ⚠️              | ✅    | ❌           | MFSW will work in next version |
 | Audi TT 8J   | ⚠️              | ⚠️    | ⚠️           |      |
 | Audi R8 42   | ⚠️              | ⚠️    | ⚠️           |      |
 
